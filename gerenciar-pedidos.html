@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Gerenciar Pedidos</title>
+
+<style>
+
+/* ===== FUNDO IGUAL INDEX ===== */
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: url("fundo.jpg") no-repeat center center fixed;
+  background-size: cover;
+  color: #fff;
+}
+
+/* ===== TOPO ===== */
+.topo{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:20px 40px;
+}
+
+.titulo{
+  text-align:center;
+  font-size:32px;
+  font-weight:bold;
+  flex:1;
+}
+
+.btn-topo{
+  border:2px solid white;
+  padding:8px 18px;
+  border-radius:25px;
+  cursor:pointer;
+  transition:.2s;
+}
+
+.btn-topo:hover{
+  background:white;
+  color:black;
+}
+
+/* ===== FILTRO ===== */
+
+.filtro-container{
+  text-align:center;
+  margin-top:15px;
+}
+
+.filtro-select,
+.filtro-input{
+  padding:10px 15px;
+  border-radius:20px;
+  border:none;
+  margin:5px;
+  outline:none;
+}
+
+.btn-filtrar{
+  padding:10px 20px;
+  border-radius:20px;
+  border:none;
+  cursor:pointer;
+  background:white;
+  font-weight:bold;
+  transition:.2s;
+}
+
+.btn-filtrar:hover{
+  transform:scale(1.05);
+}
+
+/* ===== GRID ===== */
+.cards-container{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+  gap:20px;
+  padding:40px;
+}
+
+/* ===== CARD ===== */
+.card-pedido{
+  background:white;
+  color:black;
+  border-radius:15px;
+  padding:15px;
+  cursor:pointer;
+  transition:all .25s ease;
+  box-shadow:0 4px 10px rgba(0,0,0,0.2);
+  position:relative;
+}
+
+.card-pedido:hover{
+  transform:scale(1.05) rotate(.5deg);
+  box-shadow:0 10px 25px rgba(0,0,0,0.3);
+}
+
+.card-expandido{
+  grid-column:span 2;
+  background:#f2f2f2;
+}
+
+/* ===== PAGINAÇÃO ===== */
+.paginacao{
+  text-align:center;
+  margin:30px;
+}
+
+.paginacao button{
+  padding:10px 20px;
+  margin:10px;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+}
+
+/* ===== NOTIFICAÇÃO ===== */
+.notificacao{
+  position:relative;
+}
+
+.badge{
+  position:absolute;
+  top:-8px;
+  right:-8px;
+  background:red;
+  color:white;
+  font-size:12px;
+  border-radius:50%;
+  padding:4px 8px;
+}
+
+/* ===== STATUS VISUAL DOS CARDS ===== */
+
+.card-ativo{
+  background: linear-gradient(135deg, #1e88e5, #1565c0);
+  color:#fff;
+}
+
+.card-producao{
+  background: linear-gradient(135deg, #f9a825, #f57f17);
+  color:#000;
+}
+
+.card-entregue{
+  background: linear-gradient(135deg, #43a047, #2e7d32);
+  color:#fff;
+}
+
+.card-ativo b,
+.card-producao b,
+.card-entregue b{
+  color:inherit;
+}
+
+/* etiqueta de status */
+.tag-status{
+  display:inline-block;
+  margin-top:8px;
+  padding:6px 12px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:800;
+  background: rgba(255,255,255,0.25);
+}
+
+/* ===== BOTÃO EXCLUIR ===== */
+.btn-excluir{
+  background:#e53935;
+  color:#fff;
+  border:none;
+  padding:8px 12px;
+  border-radius:8px;
+  cursor:pointer;
+  margin-top:8px;
+  font-weight:bold;
+}
+
+.btn-excluir:hover{
+  background:#c62828;
+}
+
+/* ===== BOTÃO ENTREGA ===== */
+.btn-entrega{
+  background:#1565c0;
+  color:#fff;
+  border:none;
+  padding:10px 14px;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:bold;
+}
+
+.btn-entrega:hover{
+  background:#0d47a1;
+}
+  
+</style>
+</head>
+<body>
+
+<div class="topo">
+  <div class="btn-topo" onclick="window.location.href='jader.html'">Voltar</div>
+  <div class="titulo">GERENCIAR PEDIDOS</div>
+  <div class="btn-topo notificacao" onclick="limparNotificacao()">
+    🔔
+    <span id="badge" class="badge" style="display:none;">0</span>
+  </div>
+</div>
+
+<div class="filtro-container">
+
+  <input 
+    id="filtroVendedor"
+    class="filtro-input"
+    type="text"
+    placeholder="Filtrar por vendedor"
+  >
+
+  <input 
+    id="filtroDataEntrega"
+    class="filtro-input"
+    type="date"
+  >
+
+  <select id="filtroZona" class="filtro-select">
+    <option value="">Filtrar por Zona</option>
+    <option value="centro">Centro</option>
+    <option value="zona_norte">Zona Norte</option>
+    <option value="zona_sul">Zona Sul</option>
+    <option value="zona_leste">Zona Leste</option>
+    <option value="zona_oeste">Zona Oeste</option>
+    <option value="abc_paulista">ABC Paulista</option>
+    <option value="litoral_sul">Litoral Sul</option>
+    <option value="litoral_norte">Litoral Norte</option>
+    <option value="sudoeste">Sudoeste</option>
+    <option value="interior">Interior</option>
+  </select>
+
+</div>
+
+<div id="pendentes" class="cards-container"></div>
+
+<div class="paginacao">
+  <button onclick="paginaAnterior()">Anterior</button>
+  <button onclick="proximaPagina()">Próxima</button>
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { 
+  getFirestore,
+  collection,
+  query,
+  orderBy,
+  limit,
+  startAfter,
+  getDocs,
+  onSnapshot,
+  updateDoc,
+  doc,
+  deleteDoc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBlB4NN_lTrWv4sJ1PKp2m0YjoVADnIeHk",
+  authDomain: "crm-vendas-43b6b.firebaseapp.com",
+  projectId: "crm-vendas-43b6b",
+  storageBucket: "crm-vendas-43b6b.appspot.com",
+  messagingSenderId: "645002761099",
+  appId: "1:645002761099:web:f194f70c351d1074ac158e"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+let ultimoDoc = null;
+const limitePagina = 12;
+let vendasCache = [];
+let contadorNotificacao = 0;
+let listaFiltradaCache = [];
+let paginaFiltroAtual = 1;
+let modoFiltroAtivo = false;
+
+/* ===== LOGIN ===== */
+onAuthStateChanged(auth, (user)=>{
+  if(!user) return;
+  carregarPedidos();
+  ativarNotificacaoTempoReal();
+});
+
+/* ===== FORMATAR ===== */
+function formatarValor(v){
+  return Number(v || 0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+}
+
+function formatarZona(z){
+  const map = {
+    centro: "Centro",
+    zona_norte: "Zona Norte",
+    zona_sul: "Zona Sul",
+    zona_leste: "Zona Leste",
+    zona_oeste: "Zona Oeste",
+    abc_paulista: "ABC Paulista",
+    litoral_sul: "Litoral Sul",
+    litoral_norte: "Litoral Norte",
+    sudoeste: "Sudoeste",
+    interior: "Interior"
+  };
+  return map[z] || "-";
+}
+
+function calcularTotal(v){
+  const produto = v.produto?.valor ?? 0;
+  const frete = v.frete ?? 0;
+  const montagem = v.montagem ?? 0;
+  return produto + frete + montagem;
+}
+
+/* ===== ENTREGADORES ===== */
+const entregadores = {
+   "1": { id: "QxxqAddYbRNLJTA5AyU4I2TZY3B2", nome: "Entregador" },
+  "2": { id: "1HxainnrEKNLS9DYPvYnn9b257R2", nome: "Entregador 2" },
+  "3": { id: "UTu43jf0zXgPEUqylg2pCgv0Fd02", nome: "Entregador 3" },
+  "4": { id: "3FeRguzEIWcBNSUFLfAfBD8msWj2", nome: "Entregador 4" },
+  "5": { id: "8LlVYRtFHZaO47414RgEyYR7gFw2", nome: "Entregador 5" },
+  "6": { id: "s6yXcz6ALUaHDWL3cisodoxfmCl1", nome: "Entregador 6" }
+};
+
+/* ===== CARREGAR ===== */
+async function carregarPedidos(direcao="primeira"){
+
+  const pendentesDiv = document.getElementById("pendentes");
+  pendentesDiv.innerHTML = "Carregando...";
+
+  let q;
+
+  if(direcao==="proxima" && ultimoDoc){
+    q = query(
+      collection(db,"vendas"),
+      orderBy("dataPedido","desc"),
+      startAfter(ultimoDoc),
+      limit(limitePagina)
+    );
+  }else{
+    q = query(
+      collection(db,"vendas"),
+      orderBy("dataPedido","desc"),
+      limit(limitePagina)
+    );
+  }
+
+  const snapshot = await getDocs(q);
+
+  if(snapshot.empty){
+    pendentesDiv.innerHTML="Nenhum pedido encontrado.";
+    return;
+  }
+
+  ultimoDoc = snapshot.docs[snapshot.docs.length-1];
+
+  vendasCache = snapshot.docs.map(doc=>({id:doc.id,...doc.data()}));
+
+  renderizarCards(vendasCache);
+}
+
+async function carregarTodosPedidos(){
+  const q = query(
+    collection(db,"vendas"),
+    orderBy("dataPedido","desc")
+  );
+
+  const snapshot = await getDocs(q);
+
+  return snapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data()
+  }));
+}
+
+/* ===== RENDER ===== */
+function renderizarCards(lista){
+
+  const pendentesDiv = document.getElementById("pendentes");
+  pendentesDiv.innerHTML="";
+
+  lista.forEach(v=>{
+
+    const total = calcularTotal(v);
+
+    const classeStatus =
+      v.status === "em_entrega" ? "card-producao" :
+      v.status === "entregue" ? "card-entregue" :
+      "card-ativo";
+
+    pendentesDiv.innerHTML+=`
+      <div class="card-pedido ${classeStatus}" onclick="expandirCard(this)">
+         <b>Pedido:</b> ${v.pedido}<br>
+         📍 <b>${v.cliente?.cidade || "-"}</b><br>
+         <b>Entrega:</b> ${v.dataEntrega}<br>
+         <b>Vendedor:</b> ${v.vendedorNome}<br>
+        <div class="detalhes" style="display:none;margin-top:10px;">
+          <hr>
+          <b>Cliente:</b> ${v.cliente?.nome || "-"}<br>
+          <b>Modelo:</b> ${v.produto?.modelo}<br>
+          <b>Cor:</b> ${v.produto?.cor}<br>
+          <b>Tamanho:</b> ${v.produto?.tamanho}<br>
+          <b>Zona:</b> ${formatarZona(v.zona)}<br>
+          <b>Status:</b> ${v.status || "-"}<br>
+          <b>Valor:</b> ${formatarValor(total)}<br>
+          <b>Observações:</b> ${v.observacoes || "-"}<br>
+          <b>Entregador:</b> ${v.entregadorNome || "-"}
+          <br><br>
+           
+         ${
+   v.status === "entregue"
+    ? `<span class="tag-status tag-entregue">Entregue</span>`
+    : v.status === "em_entrega"
+      ? `<span class="tag-status tag-producao">Em entrega</span>`
+      : `<button class="btn-entrega"
+          onclick="event.stopPropagation(); enviarParaEntrega('${v.id}')">
+          Enviar para Entrega
+        </button>`
+}
+
+          <br><br>
+
+          <button class="btn-excluir"
+            onclick="event.stopPropagation(); excluirPedido('${v.id}')">
+            Excluir Pedido
+          </button>
+           
+        </div>
+      </div>
+    `;
+  });
+}
+
+function renderizarPaginaFiltrada(){
+  const inicio = (paginaFiltroAtual - 1) * limitePagina;
+  const fim = inicio + limitePagina;
+  const pagina = listaFiltradaCache.slice(inicio, fim);
+
+  renderizarCards(pagina);
+}
+  
+/* ===== EXPANSÃO ===== */
+window.expandirCard=(card)=>{
+
+  const detalhes = card.querySelector(".detalhes");
+  const expandido = card.classList.contains("card-expandido");
+
+  document.querySelectorAll(".card-pedido").forEach(c=>{
+    c.classList.remove("card-expandido");
+    c.querySelector(".detalhes").style.display="none";
+  });
+
+  if(!expandido){
+    card.classList.add("card-expandido");
+    detalhes.style.display="block";
+  }
+};
+
+/* ===== FILTROS ===== */
+const filtroVendedor = document.getElementById("filtroVendedor");
+const filtroDataEntrega = document.getElementById("filtroDataEntrega");
+const filtroZona = document.getElementById("filtroZona");
+
+async function aplicarFiltros(){
+  const vendedor = String(filtroVendedor.value || "").toLowerCase().trim();
+  const dataEntrega = filtroDataEntrega.value;
+  const zonaSelecionada = filtroZona.value;
+
+  const usandoFiltro = !!vendedor || !!dataEntrega || !!zonaSelecionada;
+
+  if(!usandoFiltro){
+    modoFiltroAtivo = false;
+    listaFiltradaCache = [];
+    paginaFiltroAtual = 1;
+    carregarPedidos();
+    return;
+  }
+
+  modoFiltroAtivo = true;
+
+  const listaCompleta = await carregarTodosPedidos();
+  let filtrado = [...listaCompleta];
+
+  if(vendedor){
+    filtrado = filtrado.filter(v =>
+      String(v.vendedorNome || "").toLowerCase().includes(vendedor)
+    );
+  }
+
+  if(dataEntrega){
+    filtrado = filtrado.filter(v =>
+      String(v.dataEntrega || "") === dataEntrega
+    );
+  }
+
+  if(zonaSelecionada){
+    filtrado = filtrado.filter(v =>
+      v.zona === zonaSelecionada
+    );
+  }
+
+  listaFiltradaCache = filtrado;
+  paginaFiltroAtual = 1;
+  renderizarPaginaFiltrada();
+}
+
+filtroVendedor.oninput = aplicarFiltros;
+filtroDataEntrega.onchange = aplicarFiltros;
+filtroZona.onchange = aplicarFiltros;
+  
+/* ===== PAGINAÇÃO ===== */
+window.proximaPagina = () => {
+  if (modoFiltroAtivo){
+    const totalPaginas = Math.ceil(listaFiltradaCache.length / limitePagina);
+    if (paginaFiltroAtual < totalPaginas){
+      paginaFiltroAtual++;
+      renderizarPaginaFiltrada();
+    }
+    return;
+  }
+
+  carregarPedidos("proxima");
+};
+
+window.paginaAnterior = () => {
+  if (modoFiltroAtivo){
+    if (paginaFiltroAtual > 1){
+      paginaFiltroAtual--;
+      renderizarPaginaFiltrada();
+    }
+    return;
+  }
+
+  ultimoDoc = null;
+  carregarPedidos();
+};
+  
+/* ===== NOTIFICAÇÃO REALTIME ===== */
+function ativarNotificacaoTempoReal(){
+  onSnapshot(collection(db,"vendas"),()=>{
+    contadorNotificacao++;
+    const badge = document.getElementById("badge");
+    badge.style.display="block";
+    badge.innerText=contadorNotificacao;
+  });
+}
+
+window.limparNotificacao = () => {
+  contadorNotificacao = 0;
+  const badge = document.getElementById("badge");
+  badge.style.display = "none";
+};
+
+/* ===== AÇÕES ===== */
+window.enviarParaEntrega = async (id) => {
+  const escolha = prompt(
+    "Digite o número do entregador:\n\n" +
+    "1 - Entregador 1\n" +
+    "2 - Entregador 2\n" +
+    "3 - Entregador 3\n" +
+    "4 - Entregador 4\n" +
+    "5 - Entregador 5\n" +
+    "6 - Entregador 6"
+  );
+
+  if (!escolha) return;
+
+  const entregador = entregadores[escolha];
+
+  if (!entregador){
+    alert("Entregador inválido.");
+    return;
+  }
+
+  const confirmar = confirm("Deseja enviar este pedido para " + entregador.nome + "?");
+  if (!confirmar) return;
+
+  await updateDoc(doc(db, "vendas", id), {
+    status: "em_entrega",
+    entregadorId: entregador.id,
+    entregadorNome: entregador.nome,
+    enviadoParaEntregaEm: new Date().toISOString()
+  });
+
+  alert("Pedido enviado para entrega com sucesso!");
+
+  if (modoFiltroAtivo) {
+    await aplicarFiltros();
+  } else {
+    carregarPedidos();
+  }
+};
+  
+window.excluirPedido = async (id) => {
+  const confirmar = confirm("Deseja realmente excluir este pedido?");
+  if (!confirmar) return;
+
+  await deleteDoc(doc(db, "vendas", id));
+
+  alert("Pedido excluído com sucesso!");
+
+  if (modoFiltroAtivo) {
+    await aplicarFiltros();
+  } else {
+    carregarPedidos();
+  }
+};
+  
+</script>
+</body>
+</html>
