@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<title>Financeiro - JD</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body{
+  margin:0;
+  font-family:'Segoe UI', Arial, sans-serif;
+  background:url("fundo.jpg") no-repeat center center fixed;
+  background-size:cover;
+  color:#fff;
+}
+
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  background:
+    radial-gradient(circle at 30% 12%, rgba(33,150,243,0.18), transparent 45%),
+    radial-gradient(circle at 80% 35%, rgba(76,175,80,0.10), transparent 45%),
+    rgba(0,0,0,0.22);
+  z-index:-1;
+}
+
+.container{
+  max-width:1280px;
+  margin:auto;
+  padding:34px 26px;
+}
+
+.topbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  margin-bottom:18px;
+}
+
+.title{
+  font-size:44px;
+  font-weight:900;
+  letter-spacing:.3px;
+  margin:0;
+}
+
+.top-actions{
+  display:flex;
+  gap:12px;
+  align-items:center;
+}
+
+.btn-pill{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:12px 18px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,0.18);
+  background:rgba(0,0,0,0.25);
+  backdrop-filter:blur(12px);
+  cursor:pointer;
+  color:#fff;
+  font-weight:800;
+  transition:.25s ease;
+}
+
+.btn-pill:hover{
+  transform:translateY(-1px);
+  background:rgba(255,255,255,0.12);
+}
+
+.filtros{
+  display:grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap:12px;
+  margin:16px 0 20px;
+}
+
+.control{
+  width:100%;
+  padding:12px 14px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,0.16);
+  background:rgba(0,0,0,0.22);
+  color:#fff;
+  outline:none;
+  font-weight:800;
+  backdrop-filter:blur(10px);
+  box-sizing:border-box;
+}
+
+.control option{
+  color:#000;
+}
+
+.kpis{
+  display:grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap:14px;
+  margin-bottom:18px;
+}
+
+.kpi{
+  background: rgba(0,0,0,0.18);
+  border:1px solid rgba(255,255,255,0.16);
+  border-radius:18px;
+  padding:18px;
+  backdrop-filter:blur(14px);
+  box-shadow:0 18px 46px rgba(0,0,0,0.45);
+}
+
+.kpi-label{
+  font-size:14px;
+  font-weight:900;
+  margin-bottom:8px;
+  opacity:.95;
+}
+
+.kpi-value{
+  font-size:22px;
+  font-weight:900;
+  color:#79ff9a;
+}
+
+.kpi-sub{
+  margin-top:8px;
+  font-size:12px;
+  opacity:.8;
+  font-weight:800;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns: 1.1fr .9fr;
+  gap:18px;
+  margin-bottom:18px;
+}
+
+  .card-full{
+  margin-bottom:18px;
+}
+
+.card-evolucao-full{
+  min-height:540px;
+}
+
+.card-evolucao-full #evolucaoChart{
+  height:420px !important;
+  max-height:420px !important;
+}
+
+.card{
+  background: rgba(0,0,0,0.18);
+  border:1px solid rgba(255,255,255,0.16);
+  border-radius:18px;
+  padding:18px;
+  backdrop-filter:blur(14px);
+  box-shadow:0 18px 46px rgba(0,0,0,0.45);
+}
+
+.card h2{
+  margin:0 0 14px;
+  font-size:24px;
+  font-weight:900;
+}
+
+.card p.sub{
+  margin:0 0 16px;
+  opacity:.86;
+  font-weight:700;
+}
+
+.form-grid{
+  display:grid;
+  grid-template-columns: 1.1fr .9fr .8fr .8fr;
+  gap:12px;
+  margin-bottom:12px;
+}
+
+.form-grid-obs{
+  display:grid;
+  grid-template-columns: 1fr auto auto;
+  gap:12px;
+}
+
+.btn-primary{
+  border:none;
+  border-radius:14px;
+  background:linear-gradient(135deg,#0d63c9,#0b4da6);
+  color:#fff;
+  font-weight:900;
+  cursor:pointer;
+  padding:12px 16px;
+  box-shadow:0 10px 24px rgba(0,0,0,0.35);
+}
+
+.btn-secondary{
+  border:none;
+  border-radius:14px;
+  background:rgba(255,255,255,0.14);
+  color:#fff;
+  font-weight:900;
+  cursor:pointer;
+  padding:12px 16px;
+}
+
+.btn-primary:hover,
+.btn-secondary:hover{
+  transform:translateY(-1px);
+}
+
+.btn-danger{
+  border:none;
+  border-radius:10px;
+  background:#e53935;
+  color:#fff;
+  font-weight:900;
+  cursor:pointer;
+  padding:8px 12px;
+}
+
+.btn-edit{
+  border:none;
+  border-radius:10px;
+  background:#1565c0;
+  color:#fff;
+  font-weight:900;
+  cursor:pointer;
+  padding:8px 12px;
+  margin-right:8px;
+}
+
+.btn-danger:hover,
+.btn-edit:hover{
+  filter:brightness(1.05);
+}
+
+.table-wrap{
+  overflow:auto;
+  border-radius:14px;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  min-width:1000px;
+}
+
+thead th{
+  text-align:left;
+  font-size:13px;
+  padding:14px 12px;
+  background:rgba(255,255,255,0.10);
+  border-bottom:1px solid rgba(255,255,255,0.10);
+  white-space:nowrap;
+}
+
+tbody td{
+  padding:14px 12px;
+  border-bottom:1px solid rgba(255,255,255,0.08);
+  font-size:14px;
+  white-space:nowrap;
+}
+
+tbody tr:hover{
+  background:rgba(255,255,255,0.06);
+}
+
+.badge{
+  display:inline-block;
+  padding:6px 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:900;
+}
+
+.badge.entrada{ background:rgba(76,175,80,0.24); }
+.badge.saida{ background:rgba(229,57,53,0.24); }
+
+.vazio{
+  padding:18px;
+  text-align:center;
+  opacity:.8;
+  font-weight:800;
+}
+
+canvas{
+  width:100% !important;
+  height:280px !important;
+  max-height:280px;
+}
+
+#evolucaoChart{
+  height:420px !important;
+  max-height:420px !important;
+}
+
+.saldo-boxes{
+  display:grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap:12px;
+  margin-bottom:16px;
+}
+
+.saldo-item{
+  background:rgba(255,255,255,0.08);
+  border:1px solid rgba(255,255,255,0.10);
+  border-radius:14px;
+  padding:12px 14px;
+}
+
+.saldo-label{
+  font-size:13px;
+  font-weight:900;
+  opacity:.9;
+  margin-bottom:6px;
+}
+
+.saldo-value{
+  font-size:18px;
+  font-weight:900;
+  color:#79ff9a;
+}
+
+@media (max-width: 1100px){
+  .filtros{ grid-template-columns: repeat(2, 1fr); }
+  .kpis{ grid-template-columns: repeat(2, 1fr); }
+  .grid, .grid-bottom{ grid-template-columns: 1fr; }
+  .form-grid{ grid-template-columns: 1fr 1fr; }
+  .saldo-boxes{ grid-template-columns:1fr; }
+}
+
+@media (max-width: 700px){
+  .title{ font-size:32px; }
+  .filtros, .kpis, .form-grid, .form-grid-obs{ grid-template-columns:1fr; }
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+  <div class="topbar">
+    <h1 class="title">Financeiro</h1>
+    <div class="top-actions">
+      <button class="btn-pill" onclick="location.href='comissoes.html'">Comissões</button>
+      <button class="btn-pill" onclick="location.href='jader.html'">Voltar</button>
+    </div>
+  </div>
+
+  <div class="filtros">
+    <select id="filtroPeriodo" class="control">
+      <option value="mes">Este mês</option>
+      <option value="semana">Esta semana</option>
+      <option value="dia">Hoje</option>
+      <option value="personalizado">Período personalizado</option>
+    </select>
+
+    <input id="dataInicio" class="control" type="date">
+    <input id="dataFim" class="control" type="date">
+
+    <input id="filtroVendedor" class="control" type="text" placeholder="Filtrar por vendedor">
+
+    <select id="filtroZona" class="control">
+      <option value="">Todas as zonas</option>
+      <option value="centro">Centro</option>
+      <option value="zona_norte">Zona Norte</option>
+      <option value="zona_sul">Zona Sul</option>
+      <option value="zona_leste">Zona Leste</option>
+      <option value="zona_oeste">Zona Oeste</option>
+      <option value="abc_paulista">ABC Paulista</option>
+      <option value="litoral_sul">Litoral Sul</option>
+      <option value="litoral_norte">Litoral Norte</option>
+      <option value="sudoeste">Sudoeste</option>
+      <option value="interior">Interior</option>
+    </select>
+
+    <select id="filtroCategoriaFinanceira" class="control">
+      <option value="">Todas as categorias</option>
+    </select>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi">
+      <div class="kpi-label">Total vendido</div>
+      <div class="kpi-value" id="kpiTotalVendido">R$ 0,00</div>
+      <div class="kpi-sub">Vendas do período</div>
+    </div>
+
+    <div class="kpi">
+      <div class="kpi-label">Quantidade de pedidos</div>
+      <div class="kpi-value" id="kpiQuantidadePedidos">0</div>
+      <div class="kpi-sub">Pedidos no período</div>
+    </div>
+
+    <div class="kpi">
+      <div class="kpi-label">Ticket médio</div>
+      <div class="kpi-value" id="kpiTicketMedio">R$ 0,00</div>
+      <div class="kpi-sub">Média por pedido</div>
+    </div>
+
+    <div class="kpi">
+      <div class="kpi-label">Valor líquido</div>
+      <div class="kpi-value" id="kpiValorLiquido">R$ 0,00</div>
+      <div class="kpi-sub">Vendas - custo dos sofás + entradas - saídas</div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Fluxo de Caixa</h2>
+      <p class="sub">Cadastre entradas e saídas financeiras do negócio.</p>
+
+      <div class="saldo-boxes">
+        <div class="saldo-item">
+          <div class="saldo-label">Entradas manuais</div>
+          <div class="saldo-value" id="totalEntradasManuais">R$ 0,00</div>
+        </div>
+        <div class="saldo-item">
+          <div class="saldo-label">Saídas</div>
+          <div class="saldo-value" id="totalSaidas">R$ 0,00</div>
+        </div>
+        <div class="saldo-item">
+          <div class="saldo-label">Saldo do caixa</div>
+          <div class="saldo-value" id="saldoCaixa">R$ 0,00</div>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <input id="finDescricao" class="control" type="text" placeholder="Descrição">
+        
+        <select id="finCategoria" class="control">
+          <option value="">Selecione a categoria</option>
+          <option value="Matéria-prima">Matéria-prima</option>
+          <option value="Transporte">Transporte</option>
+          <option value="Contas fixas">Contas fixas</option>
+          <option value="Salários">Salários</option>
+          <option value="Impostos">Impostos</option>
+          <option value="Marketing">Marketing</option>
+          <option value="Manutenção">Manutenção</option>
+          <option value="Outros">Outros</option>
+        </select>
+
+        <select id="finTipo" class="control">
+          <option value="saida">Saída</option>
+          <option value="entrada">Entrada</option>
+        </select>
+
+        <input id="finValor" class="control" type="number" step="0.01" placeholder="Valor">
+      </div>
+
+      <div class="form-grid-obs">
+        <input id="finObservacao" class="control" type="text" placeholder="Observação (opcional)">
+        <button id="btnAdicionarLancamento" class="btn-primary" type="button">Salvar lançamento</button>
+        <button id="btnCancelarEdicao" class="btn-secondary" type="button" style="display:none;">Cancelar edição</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Formas de Pagamento</h2>
+      <p class="sub">Distribuição dos gastos por categoria financeira.</p>
+      <canvas id="gastosCategoriaChart"></canvas>
+    </div>
+  </div>
+
+  <div class="card card-full">
+  <h2>Lançamentos do Período</h2>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Data</th>
+          <th>Descrição</th>
+          <th>Categoria</th>
+          <th>Tipo</th>
+          <th>Valor</th>
+          <th>Observação</th>
+          <th>Ação</th>
+        </tr>
+      </thead>
+      <tbody id="tbodyLancamentos"></tbody>
+    </table>
+  </div>
+  <div id="vazioLancamentos" class="vazio" style="display:none;">Nenhum lançamento encontrado no período.</div>
+</div>
+
+<div class="card card-evolucao-full">
+  <h2>Evolução Diária</h2>
+  <p class="sub">Performance de vendas por dia no período.</p>
+  <canvas id="evolucaoChart"></canvas>
+</div>
+
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  addDoc,
+  doc,
+  deleteDoc,
+  updateDoc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBlB4NN_lTrWv4sJ1PKp2m0YjoVADnIeHk",
+  authDomain: "crm-vendas-43b6b.firebaseapp.com",
+  projectId: "crm-vendas-43b6b",
+  storageBucket: "crm-vendas-43b6b.appspot.com",
+  messagingSenderId: "645002761099",
+  appId: "1:645002761099:web:f194f70c351d1074ac158e"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const filtroPeriodo = document.getElementById("filtroPeriodo");
+const dataInicio = document.getElementById("dataInicio");
+const dataFim = document.getElementById("dataFim");
+const filtroVendedor = document.getElementById("filtroVendedor");
+const filtroZona = document.getElementById("filtroZona");
+const filtroCategoriaFinanceira = document.getElementById("filtroCategoriaFinanceira");
+
+const finDescricao = document.getElementById("finDescricao");
+const finCategoria = document.getElementById("finCategoria");
+const finTipo = document.getElementById("finTipo");
+const finValor = document.getElementById("finValor");
+const finObservacao = document.getElementById("finObservacao");
+const btnAdicionarLancamento = document.getElementById("btnAdicionarLancamento");
+const btnCancelarEdicao = document.getElementById("btnCancelarEdicao");
+
+const tbodyLancamentos = document.getElementById("tbodyLancamentos");
+const vazioLancamentos = document.getElementById("vazioLancamentos");
+
+let vendasCache = [];
+let lancamentosCache = [];
+let charts = [];
+let lancamentoEditandoId = null;
+
+  const CUSTO_POR_SOFA = 1200;
+
+function moedaBRL(v){
+  return Number(v || 0).toLocaleString("pt-BR", { style:"currency", currency:"BRL" });
+}
+
+function getHojeLocal(){
+  const hoje = new Date();
+  return hoje.toISOString().slice(0,10);
+}
+
+function toYMD(dateObj){
+  const ano = dateObj.getFullYear();
+  const mes = String(dateObj.getMonth() + 1).padStart(2, "0");
+  const dia = String(dateObj.getDate()).padStart(2, "0");
+  return `${ano}-${mes}-${dia}`;
+}
+  
+function getInicioSemana(data = new Date()){
+  const d = new Date(data);
+  const diaSemana = d.getDay();
+  const diff = diaSemana === 0 ? -6 : 1 - diaSemana;
+  d.setDate(d.getDate() + diff);
+  return d;
+}
+
+function aplicarPeriodoAutomatico(){
+  const hoje = new Date();
+  const tipo = filtroPeriodo.value;
+
+  if (tipo === "dia"){
+    const hojeYMD = getHojeLocal();
+    dataInicio.value = hojeYMD;
+    dataFim.value = hojeYMD;
+  } else if (tipo === "semana"){
+    const inicio = getInicioSemana(hoje);
+    dataInicio.value = toYMD(inicio);
+    dataFim.value = getHojeLocal();
+  } else if (tipo === "mes"){
+    const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+    dataInicio.value = toYMD(inicioMes);
+    dataFim.value = getHojeLocal();
+  }
+}
+
+function calcularTotalVenda(v){
+  const totalDoc = Number(v.total ?? v.valor ?? 0);
+  if (totalDoc > 0) return totalDoc;
+
+  const produto = Number(v.produto?.valor ?? 0);
+  const frete = Number(v.frete ?? 0);
+  const montagem = Number(v.montagem ?? 0);
+  return produto + frete + montagem;
+}
+
+function filtrarVendas(){
+  const inicio = dataInicio.value;
+  const fim = dataFim.value;
+  const vendedor = String(filtroVendedor.value || "").toLowerCase().trim();
+  const zona = filtroZona.value;
+
+  return vendasCache.filter(v => {
+    const data = String(v.dataPedido || "");
+    const nomeVendedor = String(v.vendedorNome || "").toLowerCase();
+    const zonaVenda = String(v.zona || "");
+
+    if (inicio && data < inicio) return false;
+    if (fim && data > fim) return false;
+    if (vendedor && !nomeVendedor.includes(vendedor)) return false;
+    if (zona && zonaVenda !== zona) return false;
+
+    return true;
+  });
+}
+
+function filtrarLancamentos(){
+  const inicio = dataInicio.value;
+  const fim = dataFim.value;
+  const categoria = filtroCategoriaFinanceira.value;
+
+  return lancamentosCache.filter(l => {
+    const data = String(l.dataLancamento || "");
+    const cat = String(l.categoria || "");
+
+    if (inicio && data < inicio) return false;
+    if (fim && data > fim) return false;
+    if (categoria && cat !== categoria) return false;
+
+    return true;
+  });
+}
+
+  function preencherFiltroCategorias(){
+  const categorias = [...new Set(
+    lancamentosCache.map(l => String(l.categoria || "").trim()).filter(Boolean)
+  )].sort((a,b) => a.localeCompare(b, "pt-BR"));
+
+  const atual = filtroCategoriaFinanceira.value;
+
+  filtroCategoriaFinanceira.innerHTML =
+    `<option value="">Todas as categorias</option>` +
+    categorias.map(cat => `<option value="${cat}">${cat}</option>`).join("");
+
+  filtroCategoriaFinanceira.value = categorias.includes(atual) ? atual : "";
+}
+
+function destroyCharts(){
+  charts.forEach(c => {
+    try { c.destroy(); } catch(e){}
+  });
+  charts = [];
+}
+
+function applyChartDefaults(){
+  Chart.defaults.color = "rgba(255,255,255,0.85)";
+  Chart.defaults.font.family = "'Segoe UI', Arial, sans-serif";
+  Chart.defaults.plugins.legend.labels.usePointStyle = true;
+  Chart.defaults.plugins.legend.labels.boxWidth = 10;
+}
+
+function renderKpis(){
+  const vendas = filtrarVendas();
+  const lancamentos = filtrarLancamentos();
+
+  const totalVendido = vendas.reduce((acc, v) => acc + calcularTotalVenda(v), 0);
+  const quantidadePedidos = vendas.length;
+  const ticketMedio = quantidadePedidos ? totalVendido / quantidadePedidos : 0;
+
+  const custoTotalSofas = quantidadePedidos * CUSTO_POR_SOFA;
+
+  const totalEntradasManuais = lancamentos
+    .filter(l => l.tipo === "entrada")
+    .reduce((acc, l) => acc + Number(l.valor || 0), 0);
+
+  const totalSaidas = lancamentos
+    .filter(l => l.tipo === "saida")
+    .reduce((acc, l) => acc + Number(l.valor || 0), 0);
+
+  const valorLiquido = totalVendido - custoTotalSofas + totalEntradasManuais - totalSaidas;
+  const saldoCaixa = totalEntradasManuais - totalSaidas;
+
+  document.getElementById("kpiTotalVendido").textContent = moedaBRL(totalVendido);
+  document.getElementById("kpiQuantidadePedidos").textContent = quantidadePedidos;
+  document.getElementById("kpiTicketMedio").textContent = moedaBRL(ticketMedio);
+  document.getElementById("kpiValorLiquido").textContent = moedaBRL(valorLiquido);
+
+  document.getElementById("totalEntradasManuais").textContent = moedaBRL(totalEntradasManuais);
+  document.getElementById("totalSaidas").textContent = moedaBRL(totalSaidas);
+  document.getElementById("saldoCaixa").textContent = moedaBRL(saldoCaixa);
+}
+
+function renderGastosCategoriaChart(){
+  const lancamentos = filtrarLancamentos().filter(l => l.tipo === "saida");
+
+  const porCategoria = {};
+  lancamentos.forEach(l => {
+    const categoria = l.categoria || "Sem categoria";
+    porCategoria[categoria] = (porCategoria[categoria] || 0) + Number(l.valor || 0);
+  });
+
+  const labels = Object.keys(porCategoria);
+  const valores = Object.values(porCategoria);
+
+  const ctx = document.getElementById("gastosCategoriaChart");
+  charts.push(new Chart(ctx, {
+    type: "doughnut",
+    data: {
+      labels: labels.length ? labels : ["Sem dados"],
+      datasets: [{
+        data: valores.length ? valores : [1],
+        backgroundColor: [
+          "#2196f3", "#ff9800", "#4caf50", "#9c27b0",
+          "#00bcd4", "#ffc107", "#f44336", "#795548",
+          "#607d8b", "#e91e63"
+        ],
+        borderColor: "rgba(255,255,255,0.75)",
+        borderWidth: 2,
+        hoverOffset: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: "68%",
+      plugins: {
+        legend: { position: "top" }
+      }
+    }
+  }));
+}
+
+function renderEvolucaoChart(){
+  const vendas = filtrarVendas();
+
+  const porDia = {};
+  vendas.forEach(v => {
+    const data = String(v.dataPedido || "");
+    if (!data) return;
+    porDia[data] = (porDia[data] || 0) + 1;
+  });
+
+  const labels = Object.keys(porDia).sort();
+  const valores = labels.map(l => porDia[l]);
+
+  const ctx = document.getElementById("evolucaoChart");
+  charts.push(new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: labels.length ? labels : ["Sem dados"],
+      datasets: [{
+        label: "Pedidos vendidos",
+        data: valores.length ? valores : [0],
+        backgroundColor: "rgba(33,150,243,0.85)",
+        borderRadius: 10
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: { grid: { display:false } },
+        y: { grid: { color:"rgba(255,255,255,0.08)" }, ticks: { precision:0 } }
+      },
+      plugins: {
+        legend: { display:false }
+      }
+    }
+  }));
+}
+
+function renderLancamentos(){
+  const lancamentos = filtrarLancamentos().sort((a,b) =>
+    String(b.createdAt || "").localeCompare(String(a.createdAt || ""))
+  );
+
+  if (!lancamentos.length){
+    tbodyLancamentos.innerHTML = "";
+    vazioLancamentos.style.display = "block";
+    return;
+  }
+
+  vazioLancamentos.style.display = "none";
+
+  tbodyLancamentos.innerHTML = lancamentos.map(l => `
+    <tr>
+      <td>${l.dataLancamento || "-"}</td>
+      <td>${l.descricao || "-"}</td>
+      <td>${l.categoria || "-"}</td>
+      <td><span class="badge ${l.tipo === "entrada" ? "entrada" : "saida"}">${l.tipo || "-"}</span></td>
+      <td>${moedaBRL(l.valor || 0)}</td>
+      <td>${l.observacao || "-"}</td>
+      <td>
+        <button class="btn-edit btn-editar-lancamento" type="button" data-id="${l.id}">Editar</button>
+        <button class="btn-danger btn-excluir-lancamento" type="button" data-id="${l.id}">Excluir</button>
+      </td>
+    </tr>
+  `).join("");
+
+  document.querySelectorAll(".btn-excluir-lancamento").forEach(btn => {
+    btn.onclick = async () => {
+      const id = btn.getAttribute("data-id");
+      await excluirLancamento(id);
+    };
+  });
+
+  document.querySelectorAll(".btn-editar-lancamento").forEach(btn => {
+    btn.onclick = () => {
+      const id = btn.getAttribute("data-id");
+      editarLancamento(id);
+    };
+  });
+}
+
+function limparFormulario(){
+  finDescricao.value = "";
+  finCategoria.value = "";
+  finTipo.value = "saida";
+  finValor.value = "";
+  finObservacao.value = "";
+  lancamentoEditandoId = null;
+  btnAdicionarLancamento.textContent = "Salvar lançamento";
+  btnCancelarEdicao.style.display = "none";
+}
+
+function editarLancamento(id){
+  const lancamento = lancamentosCache.find(l => l.id === id);
+  if (!lancamento) return;
+
+  lancamentoEditandoId = id;
+  finDescricao.value = lancamento.descricao || "";
+  finCategoria.value = lancamento.categoria || "";
+  finTipo.value = lancamento.tipo || "saida";
+  finValor.value = lancamento.valor || "";
+  finObservacao.value = lancamento.observacao || "";
+
+  btnAdicionarLancamento.textContent = "Atualizar lançamento";
+  btnCancelarEdicao.style.display = "inline-block";
+}
+
+function renderTudo(){
+  applyChartDefaults();
+  destroyCharts();
+  preencherFiltroCategorias();
+  renderKpis();
+  renderGastosCategoriaChart();
+  renderEvolucaoChart();
+  renderLancamentos();
+}
+
+async function carregarVendas(){
+  const snap = await getDocs(collection(db, "vendas"));
+  vendasCache = [];
+  snap.forEach(d => vendasCache.push({ id: d.id, ...d.data() }));
+}
+
+async function carregarLancamentos(){
+  const snap = await getDocs(collection(db, "financeiro_lancamentos"));
+  lancamentosCache = [];
+  snap.forEach(d => lancamentosCache.push({ id: d.id, ...d.data() }));
+}
+
+async function salvarLancamento(){
+  const descricao = finDescricao.value.trim();
+  const categoria = finCategoria.value;
+  const tipo = finTipo.value;
+  const valor = Number(finValor.value || 0);
+  const observacao = finObservacao.value.trim();
+
+  if (!descricao || !categoria || !tipo || !valor){
+    alert("Preencha descrição, categoria, tipo e valor.");
+    return;
+  }
+
+  if (lancamentoEditandoId){
+    await updateDoc(doc(db, "financeiro_lancamentos", lancamentoEditandoId), {
+      descricao,
+      categoria,
+      tipo,
+      valor,
+      observacao
+    });
+
+    await carregarLancamentos();
+    limparFormulario();
+    renderTudo();
+    alert("Lançamento atualizado com sucesso!");
+    return;
+  }
+
+  await addDoc(collection(db, "financeiro_lancamentos"), {
+    descricao,
+    categoria,
+    tipo,
+    valor,
+    observacao,
+    dataLancamento: getHojeLocal(),
+    createdAt: new Date().toISOString()
+  });
+
+  await carregarLancamentos();
+  limparFormulario();
+  renderTudo();
+  alert("Lançamento adicionado com sucesso!");
+}
+
+async function excluirLancamento(id){
+  const confirmar = confirm("Deseja realmente excluir este lançamento?");
+  if (!confirmar) return;
+
+  await deleteDoc(doc(db, "financeiro_lancamentos", id));
+  lancamentosCache = lancamentosCache.filter(l => l.id !== id);
+
+  if (lancamentoEditandoId === id){
+    limparFormulario();
+  }
+
+  renderTudo();
+  alert("Lançamento excluído com sucesso!");
+}
+
+function registrarEventos(){
+  filtroPeriodo.onchange = () => {
+    if (filtroPeriodo.value === "personalizado"){
+      dataInicio.value = "";
+      dataFim.value = "";
+    } else {
+      aplicarPeriodoAutomatico();
+    }
+    renderTudo();
+  };
+
+  dataInicio.onchange = renderTudo;
+  dataFim.onchange = renderTudo;
+  filtroVendedor.oninput = renderTudo;
+  filtroZona.onchange = renderTudo;
+  filtroCategoriaFinanceira.onchange = renderTudo;
+
+  btnAdicionarLancamento.onclick = salvarLancamento;
+  btnCancelarEdicao.onclick = limparFormulario;
+}
+
+onAuthStateChanged(auth, async user => {
+  if (!user){
+    location.href = "login.html";
+    return;
+  }
+
+  registrarEventos();
+  aplicarPeriodoAutomatico();
+
+  await Promise.all([
+    carregarVendas(),
+    carregarLancamentos()
+  ]);
+
+  renderTudo();
+});
+</script>
+
+</body>
+</html>
