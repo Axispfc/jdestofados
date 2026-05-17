@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Minhas Vendas</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: url("fundo.jpg") no-repeat center center fixed;
+  background-size: cover;
+  position: relative;
+  color: #fff;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.65);
+  backdrop-filter: blur(4px);
+  z-index: -1;
+}
+
+.container {
+  max-width: 1000px;
+  margin: auto;
+  padding: 20px;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 20px;
+  font-weight: bold;
+}
+
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+  justify-content: center;
+}
+
+.filtros input,
+.filtros select,
+.filtros button {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: none;
+  font-size: 14px;
+}
+
+.filtros input,
+.filtros select {
+  min-width: 180px;
+}
+
+#btnFiltrar {
+  background: #1976d2;
+  color: #fff;
+}
+
+#btnLimpar {
+  background: #b0bec5;
+  color: #222;
+}
+
+.card {
+  background: rgba(255,255,255,0.95);
+  color: #333;
+  padding: 16px;
+  border-radius: 14px;
+  margin-bottom: 15px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+  transition: 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+}
+
+button {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+  margin-top: 8px;
+}
+
+.btn-voltar {
+  background: #1976d2;
+  color: white;
+}
+
+.btn-voltar:hover {
+  background: #125aa0;
+}
+
+.paginacao {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.paginacao button {
+  background: #ffffff;
+  color: #333;
+}
+
+@media (max-width: 768px) {
+  .filtros {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filtros input,
+  .filtros select,
+  .filtros button {
+    width: 100%;
+    box-sizing: border-box;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <h1>Minhas Vendas</h1>
+
+  <div class="filtros">
+    <select id="filtroPeriodo">
+      <option value="dia">Hoje</option>
+      <option value="semana">Esta semana</option>
+      <option value="mes">Este mês</option>
+      <option value="personalizado">Período personalizado</option>
+    </select>
+
+    <input type="date" id="dataInicio">
+    <input type="date" id="dataFim">
+    <input type="text" id="filtroCliente" placeholder="Nome do cliente">
+    <input type="text" id="filtroPedido" placeholder="Número do pedido">
+    <button id="btnFiltrar">Filtrar</button>
+    <button id="btnLimpar">Limpar Filtros</button>
+  </div>
+
+  <div id="listaVendas"></div>
+
+  <div class="paginacao">
+    <button id="btnAnterior">Anterior</button>
+    <button id="btnProxima">Próxima</button>
+  </div>
+
+  <button class="btn-voltar" onclick="location.href='index.html'">
+    Voltar
+  </button>
+
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import {
+  getFirestore,
+  collection,
+  query,
+  where,
+  getDocs,
+  doc,
+  deleteDoc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBlB4NN_lTrWv4sJ1PKp2m0YjoVADnIeHk",
+  authDomain: "crm-vendas-43b6b.firebaseapp.com",
+  projectId: "crm-vendas-43b6b",
+  storageBucket: "crm-vendas-43b6b.appspot.com",
+  messagingSenderId: "645002761099",
+  appId: "1:645002761099:web:f194f70c351d1074ac158e"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let todasVendas = [];
+let vendasFiltradas = [];
+let paginaAtual = 1;
+const itensPorPagina = 5;
+
+function formatarDataLocal(date) {
+  const ano = date.getFullYear();
+  const mes = String(date.getMonth() + 1).padStart(2, "0");
+  const dia = String(date.getDate()).padStart(2, "0");
+  return `${ano}-${mes}-${dia}`;
+}
+
+function inicioDaSemana(data = new Date()) {
+  const d = new Date(data);
+  const dia = d.getDay();
+  const diff = dia === 0 ? -6 : 1 - dia;
+  d.setDate(d.getDate() + diff);
+  return d;
+}
+
+function aplicarPeriodoAutomatico() {
+  const periodo = document.getElementById("filtroPeriodo").value;
+  const dataInicio = document.getElementById("dataInicio");
+  const dataFim = document.getElementById("dataFim");
+  const hoje = new Date();
+
+  if (periodo === "dia") {
+    const hojeFormatado = formatarDataLocal(hoje);
+    dataInicio.value = hojeFormatado;
+    dataFim.value = hojeFormatado;
+    dataInicio.disabled = true;
+    dataFim.disabled = true;
+  } else if (periodo === "semana") {
+    dataInicio.value = formatarDataLocal(inicioDaSemana(hoje));
+    dataFim.value = formatarDataLocal(hoje);
+    dataInicio.disabled = true;
+    dataFim.disabled = true;
+  } else if (periodo === "mes") {
+    const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+    dataInicio.value = formatarDataLocal(inicioMes);
+    dataFim.value = formatarDataLocal(hoje);
+    dataInicio.disabled = true;
+    dataFim.disabled = true;
+  } else {
+    dataInicio.disabled = false;
+    dataFim.disabled = false;
+    dataInicio.value = "";
+    dataFim.value = "";
+  }
+}
+
+function aplicarFiltros() {
+  const dataInicio = document.getElementById("dataInicio").value;
+  const dataFim = document.getElementById("dataFim").value;
+  const cliente = document.getElementById("filtroCliente").value.toLowerCase().trim();
+  const pedido = document.getElementById("filtroPedido").value.toLowerCase().trim();
+
+  vendasFiltradas = todasVendas.filter(venda => {
+    const nomeCliente = venda.cliente?.nome?.toLowerCase() || "";
+    const numeroPedido = String(venda.pedido || "").toLowerCase();
+    const dataVenda = String(venda.dataPedido || "");
+
+    const matchCliente = !cliente || nomeCliente.includes(cliente);
+    const matchPedido = !pedido || numeroPedido.includes(pedido);
+
+    let matchPeriodo = true;
+
+    if (dataInicio && dataVenda < dataInicio) {
+      matchPeriodo = false;
+    }
+
+    if (dataFim && dataVenda > dataFim) {
+      matchPeriodo = false;
+    }
+
+    return matchCliente && matchPedido && matchPeriodo;
+  });
+
+  paginaAtual = 1;
+  renderizarPagina();
+}
+
+function limparFiltros() {
+  document.getElementById("filtroPeriodo").value = "dia";
+  document.getElementById("filtroCliente").value = "";
+  document.getElementById("filtroPedido").value = "";
+  aplicarPeriodoAutomatico();
+  vendasFiltradas = [...todasVendas];
+  paginaAtual = 1;
+  renderizarPagina();
+}
+
+function renderizarPagina() {
+  const lista = document.getElementById("listaVendas");
+  lista.innerHTML = "";
+
+  const inicio = (paginaAtual - 1) * itensPorPagina;
+  const fim = inicio + itensPorPagina;
+  const pagina = vendasFiltradas.slice(inicio, fim);
+
+  if (pagina.length === 0) {
+    lista.innerHTML = "<p>Nenhuma venda encontrada.</p>";
+    return;
+  }
+
+  pagina.forEach(venda => {
+    const div = document.createElement("div");
+    div.className = "card";
+
+    div.innerHTML = `
+      <strong>Pedido:</strong> ${venda.pedido || "-"}<br>
+      <strong>Cliente:</strong> ${venda.cliente?.nome || "-"}<br>
+      <strong>Total:</strong> R$ ${Number(venda.total || 0).toFixed(2)}<br>
+      <strong>Data:</strong> ${venda.dataPedido || "-"}<br>
+      <strong class="status">Status:</strong> ${venda.status === "pendente" ? "ativa" : venda.status || "-"}
+    `;
+
+    const btnEditar = document.createElement("button");
+    btnEditar.textContent = "Editar";
+    btnEditar.style.background = "#5bc0de";
+    btnEditar.style.marginLeft = "8px";
+
+    btnEditar.onclick = () => {
+      location.href = `editar-venda.html?id=${venda.id}`;
+    };
+
+    div.appendChild(btnEditar);
+
+    const btnExcluir = document.createElement("button");
+    btnExcluir.textContent = "Excluir";
+    btnExcluir.style.background = "#d9534f";
+    btnExcluir.style.marginLeft = "8px";
+
+    btnExcluir.onclick = async () => {
+      const confirmar = confirm("Tem certeza que deseja excluir esta venda?");
+      if (!confirmar) return;
+
+      await deleteDoc(doc(db, "vendas", venda.id));
+
+      alert("Venda excluída com sucesso!");
+      location.reload();
+    };
+
+    div.appendChild(btnExcluir);
+
+    lista.appendChild(div);
+  });
+}
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    location.href = "login.html";
+    return;
+  }
+
+  const q = query(
+    collection(db, "vendas"),
+    where("vendedorEmail", "==", user.email)
+  );
+
+  const snapshot = await getDocs(q);
+
+  todasVendas = [];
+  snapshot.forEach(docSnap => {
+    todasVendas.push({
+      id: docSnap.id,
+      ...docSnap.data()
+    });
+  });
+
+  todasVendas.sort((a, b) => {
+    return new Date(b.dataPedido) - new Date(a.dataPedido);
+  });
+
+  aplicarPeriodoAutomatico();
+  vendasFiltradas = [...todasVendas];
+  renderizarPagina();
+});
+
+document.getElementById("filtroPeriodo").addEventListener("change", aplicarPeriodoAutomatico);
+document.getElementById("btnFiltrar").onclick = aplicarFiltros;
+document.getElementById("btnLimpar").onclick = limparFiltros;
+
+document.getElementById("btnAnterior").onclick = () => {
+  if (paginaAtual > 1) {
+    paginaAtual--;
+    renderizarPagina();
+  }
+};
+
+document.getElementById("btnProxima").onclick = () => {
+  if (paginaAtual * itensPorPagina < vendasFiltradas.length) {
+    paginaAtual++;
+    renderizarPagina();
+  }
+};
+</script>
+</body>
+</html>
