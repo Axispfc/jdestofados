@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<title>Comissões - JD</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+body{
+  margin:0;
+  font-family:'Segoe UI', Arial, sans-serif;
+  background:url("fundo.jpg") no-repeat center center fixed;
+  background-size:cover;
+  color:#fff;
+}
+
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  background:
+    radial-gradient(circle at 30% 12%, rgba(33,150,243,0.18), transparent 45%),
+    radial-gradient(circle at 80% 35%, rgba(76,175,80,0.10), transparent 45%),
+    rgba(0,0,0,0.22);
+  z-index:-1;
+}
+
+.container{
+  max-width:1280px;
+  margin:auto;
+  padding:34px 26px;
+}
+
+.topbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  margin-bottom:18px;
+}
+
+.title{
+  font-size:44px;
+  font-weight:900;
+  letter-spacing:.3px;
+  margin:0;
+}
+
+.top-actions{
+  display:flex;
+  gap:12px;
+  align-items:center;
+}
+
+.btn-pill{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:12px 18px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,0.18);
+  background:rgba(0,0,0,0.25);
+  backdrop-filter:blur(12px);
+  cursor:pointer;
+  color:#fff;
+  font-weight:800;
+  transition:.25s ease;
+}
+
+.btn-pill:hover{
+  transform:translateY(-1px);
+  background:rgba(255,255,255,0.12);
+}
+
+.filtros{
+  display:grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap:12px;
+  margin:16px 0 20px;
+}
+
+.control{
+  width:100%;
+  padding:12px 14px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,0.16);
+  background:rgba(0,0,0,0.22);
+  color:#fff;
+  outline:none;
+  font-weight:800;
+  backdrop-filter:blur(10px);
+}
+
+.control option{
+  color:#000;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:18px;
+}
+
+.card{
+  background: rgba(0,0,0,0.18);
+  border: 1px solid rgba(255,255,255,0.16);
+  border-radius:18px;
+  padding:18px;
+  backdrop-filter:blur(14px);
+  box-shadow:0 18px 46px rgba(0,0,0,0.45);
+}
+
+.card h2{
+  margin:0 0 14px;
+  font-size:24px;
+  font-weight:900;
+}
+
+.card p.sub{
+  margin:0 0 16px;
+  opacity:.86;
+  font-weight:700;
+}
+
+.kpis{
+  display:grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap:14px;
+  margin-bottom:18px;
+}
+
+.kpi{
+  background:rgba(255,255,255,0.08);
+  border:1px solid rgba(255,255,255,0.10);
+  border-radius:16px;
+  padding:14px;
+}
+
+.kpi-label{
+  font-size:13px;
+  font-weight:900;
+  opacity:.9;
+  margin-bottom:8px;
+}
+
+.kpi-value{
+  font-size:26px;
+  font-weight:900;
+  color:#79ff9a;
+}
+
+.table-wrap{
+  overflow:auto;
+  border-radius:14px;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  min-width:1100px;
+}
+
+thead th{
+  text-align:left;
+  font-size:13px;
+  padding:14px 12px;
+  background:rgba(255,255,255,0.10);
+  border-bottom:1px solid rgba(255,255,255,0.10);
+  white-space:nowrap;
+}
+
+tbody td{
+  padding:14px 12px;
+  border-bottom:1px solid rgba(255,255,255,0.08);
+  font-size:14px;
+  white-space:nowrap;
+}
+
+tbody tr:hover{
+  background:rgba(255,255,255,0.06);
+}
+
+.input-mini{
+  width:110px;
+  padding:10px 12px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,0.16);
+  background:rgba(0,0,0,0.22);
+  color:#fff;
+  outline:none;
+  font-weight:800;
+}
+
+.form-grid{
+  display:grid;
+  grid-template-columns: 1.2fr .8fr .8fr auto;
+  gap:12px;
+  margin-bottom:18px;
+}
+
+.btn-add{
+  border:none;
+  border-radius:14px;
+  background:linear-gradient(135deg,#0d63c9,#0b4da6);
+  color:#fff;
+  font-weight:900;
+  cursor:pointer;
+  padding:12px 16px;
+  box-shadow:0 10px 24px rgba(0,0,0,0.35);
+}
+
+.btn-remove{
+  border:none;
+  border-radius:10px;
+  background:#e53935;
+  color:#fff;
+  font-weight:900;
+  cursor:pointer;
+  padding:8px 12px;
+}
+
+.btn-save{
+  border:none;
+  border-radius:10px;
+  background:#2e7d32;
+  color:#fff;
+  font-weight:900;
+  cursor:pointer;
+  padding:8px 12px;
+  margin-right:8px;
+}
+
+.btn-pdf{
+  border:none;
+  border-radius:10px;
+  background:#1565c0;
+  color:#fff;
+  font-weight:900;
+  cursor:pointer;
+  padding:8px 12px;
+  margin-right:8px;
+}
+
+.btn-save:hover,
+.btn-remove:hover,
+.btn-add:hover,
+.btn-pdf:hover{
+  filter:brightness(1.05);
+}
+
+.total-box{
+  margin-top:14px;
+  padding:14px 16px;
+  border-radius:14px;
+  background:rgba(255,255,255,0.08);
+  border:1px solid rgba(255,255,255,0.10);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  font-weight:900;
+}
+
+.total-valor{
+  color:#79ff9a;
+  font-size:24px;
+}
+
+.vazio{
+  padding:18px;
+  text-align:center;
+  opacity:.8;
+  font-weight:800;
+}
+
+@media (max-width: 1100px){
+  .filtros{ grid-template-columns: repeat(2, 1fr); }
+  .grid{ grid-template-columns: 1fr; }
+  .kpis{ grid-template-columns: 1fr; }
+}
+
+@media (max-width: 700px){
+  .title{ font-size:32px; }
+  .filtros{ grid-template-columns: 1fr; }
+  .form-grid{ grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="topbar">
+    <h1 class="title">Comissões</h1>
+    <div class="top-actions">
+      <button class="btn-pill" onclick="location.href='financeiro.html'">Financeiro</button>
+      <button class="btn-pill" onclick="location.href='jader.html'">Voltar</button>
+    </div>
+  </div>
+
+  <div class="filtros">
+    <select id="filtroPeriodo" class="control">
+      <option value="mes">Este mês</option>
+      <option value="semana">Esta semana</option>
+      <option value="dia">Hoje</option>
+      <option value="personalizado">Período personalizado</option>
+    </select>
+
+    <input id="dataInicio" class="control" type="date">
+    <input id="dataFim" class="control" type="date">
+
+    <input id="filtroVendedor" class="control" type="text" placeholder="Filtrar vendedor">
+  </div>
+
+  <div class="grid">
+
+    <!-- VENDEDORES -->
+    <div class="card">
+      <h2>Comissão de Vendedores</h2>
+      <p class="sub">O Jader define quanto cada vendedor recebe por pedido vendido.</p>
+
+      <div class="kpis">
+        <div class="kpi">
+          <div class="kpi-label">Vendas no período</div>
+          <div class="kpi-value" id="kpiVendasPeriodo">0</div>
+        </div>
+
+        <div class="kpi">
+          <div class="kpi-label">Comissão total</div>
+          <div class="kpi-value" id="kpiComissaoVendedores">R$ 0,00</div>
+        </div>
+
+        <div class="kpi">
+          <div class="kpi-label">Vendedores ativos</div>
+          <div class="kpi-value" id="kpiVendedoresAtivos">0</div>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Vendedor</th>
+              <th>Pedidos vendidos</th>
+              <th>Valor por venda</th>
+              <th>Comissão total</th>
+              <th>Ação</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyVendedores"></tbody>
+        </table>
+      </div>
+      <div id="vazioVendedores" class="vazio" style="display:none;">Nenhum vendedor encontrado no período.</div>
+    </div>
+
+    <!-- PRODUÇÃO -->
+    <div class="card">
+      <h2>Comissão da Produção</h2>
+      <p class="sub">Cadastro manual dos produtores e cálculo por quantidade de sofás produzidos.</p>
+
+      <div class="form-grid">
+        <input id="nomeProdutor" class="control" type="text" placeholder="Nome do produtor">
+        <input id="qtdProduzida" class="control" type="number" placeholder="Qtd. sofás">
+        <input id="valorPorSofa" class="control" type="number" placeholder="Valor por sofá">
+        <button id="btnAdicionarProducao" class="btn-add" type="button">Adicionar</button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Produtor</th>
+              <th>Qtd. produzida</th>
+              <th>Valor por sofá</th>
+              <th>Total</th>
+              <th>Data</th>
+              <th>Ação</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyProducao"></tbody>
+        </table>
+      </div>
+      <div id="vazioProducao" class="vazio" style="display:none;">Nenhum lançamento de produção no período.</div>
+
+      <div class="total-box">
+        <span>Total comissão produção</span>
+        <span class="total-valor" id="totalProducao">R$ 0,00</span>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  doc,
+  setDoc,
+  deleteDoc,
+  addDoc,
+  updateDoc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBlB4NN_lTrWv4sJ1PKp2m0YjoVADnIeHk",
+  authDomain: "crm-vendas-43b6b.firebaseapp.com",
+  projectId: "crm-vendas-43b6b",
+  storageBucket: "crm-vendas-43b6b.appspot.com",
+  messagingSenderId: "645002761099",
+  appId: "1:645002761099:web:f194f70c351d1074ac158e"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const filtroPeriodo = document.getElementById("filtroPeriodo");
+const dataInicio = document.getElementById("dataInicio");
+const dataFim = document.getElementById("dataFim");
+const filtroVendedor = document.getElementById("filtroVendedor");
+
+const tbodyVendedores = document.getElementById("tbodyVendedores");
+const vazioVendedores = document.getElementById("vazioVendedores");
+
+const tbodyProducao = document.getElementById("tbodyProducao");
+const vazioProducao = document.getElementById("vazioProducao");
+
+const nomeProdutor = document.getElementById("nomeProdutor");
+const qtdProduzida = document.getElementById("qtdProduzida");
+const valorPorSofa = document.getElementById("valorPorSofa");
+const btnAdicionarProducao = document.getElementById("btnAdicionarProducao");
+
+let vendasCache = [];
+let regrasComissaoCache = {};
+let producaoCache = [];
+
+function moedaBRL(v){
+  return Number(v || 0).toLocaleString("pt-BR", { style:"currency", currency:"BRL" });
+}
+
+function getHojeLocal(){
+  const hoje = new Date();
+  return hoje.toISOString().slice(0,10);
+}
+
+function toYMD(dateObj){
+  const ano = dateObj.getFullYear();
+  const mes = String(dateObj.getMonth() + 1).padStart(2, "0");
+  const dia = String(dateObj.getDate()).padStart(2, "0");
+  return `${ano}-${mes}-${dia}`;
+}
+
+function formatarDataBR(data){
+  if (!data) return "-";
+  const [ano, mes, dia] = String(data).split("-");
+  if (!ano || !mes || !dia) return data;
+  return `${dia}/${mes}/${ano}`;
+}
+
+function getInicioSemana(data = new Date()){
+  const d = new Date(data);
+  const diaSemana = d.getDay();
+  const diff = diaSemana === 0 ? -6 : 1 - diaSemana;
+  d.setDate(d.getDate() + diff);
+  return d;
+}
+
+function slugify(text){
+  return String(text || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "") || "sem-nome";
+}
+
+function aplicarPeriodoAutomatico(){
+  const hoje = new Date();
+  const tipo = filtroPeriodo.value;
+
+  if (tipo === "dia"){
+    const hojeYMD = getHojeLocal();
+    dataInicio.value = hojeYMD;
+    dataFim.value = hojeYMD;
+  } else if (tipo === "semana"){
+    const inicio = getInicioSemana(hoje);
+    dataInicio.value = toYMD(inicio);
+    dataFim.value = getHojeLocal();
+  } else if (tipo === "mes"){
+    const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+    dataInicio.value = toYMD(inicioMes);
+    dataFim.value = getHojeLocal();
+  }
+}
+
+function filtrarVendas(){
+  const vendedorFiltro = String(filtroVendedor.value || "").toLowerCase().trim();
+  const inicio = dataInicio.value;
+  const fim = dataFim.value;
+
+  return vendasCache.filter(v => {
+    const nomeVendedor = String(v.vendedorNome || "").toLowerCase();
+    const dataPedido = String(v.dataPedido || "");
+
+    if (vendedorFiltro && !nomeVendedor.includes(vendedorFiltro)) return false;
+    if (inicio && dataPedido < inicio) return false;
+    if (fim && dataPedido > fim) return false;
+
+    return true;
+  });
+}
+
+function filtrarProducao(){
+  const inicio = dataInicio.value;
+  const fim = dataFim.value;
+
+  return producaoCache.filter(item => {
+    const data = String(item.dataLancamento || "");
+    if (inicio && data < inicio) return false;
+    if (fim && data > fim) return false;
+    return true;
+  });
+}
+
+function getVendasDoVendedor(nome){
+  return filtrarVendas().filter(v =>
+    String(v.vendedorNome || "").trim().toLowerCase() === String(nome || "").trim().toLowerCase()
+  );
+}
+
+  function getPeriodoAtualTexto(){
+  return `${dataInicio.value || ""}_${dataFim.value || ""}`;
+}
+
+function getComissaoVendedorFinanceiroId(nome){
+  return `comissao_vendedor_${slugify(nome)}_${getPeriodoAtualTexto()}`;
+}
+
+async function salvarLancamentoFinanceiroComissaoVendedor(nome, totalComissao){
+  const financeiroId = getComissaoVendedorFinanceiroId(nome);
+
+  await setDoc(doc(db, "financeiro_lancamentos", financeiroId), {
+    descricao: `Comissão vendedor - ${nome}`,
+    categoria: "Comissões",
+    tipo: "saida",
+    valor: Number(totalComissao || 0),
+    observacao: `Período: ${dataInicio.value || "-"} até ${dataFim.value || "-"}`,
+    dataLancamento: dataFim.value || getHojeLocal(),
+    origem: "comissao_vendedor",
+    referenciaNome: nome,
+    referenciaPeriodoInicio: dataInicio.value || "",
+    referenciaPeriodoFim: dataFim.value || "",
+    createdAt: new Date().toISOString()
+  });
+}
+
+async function excluirLancamentoFinanceiroComissaoVendedor(nome){
+  const financeiroId = getComissaoVendedorFinanceiroId(nome);
+  await deleteDoc(doc(db, "financeiro_lancamentos", financeiroId));
+}
+
+async function criarLancamentoFinanceiroProducao(nome, qtd, valorUnitario, total, dataLancamento, referenciaId){
+  await setDoc(doc(db, "financeiro_lancamentos", referenciaId), {
+    descricao: `Comissão produção - ${nome}`,
+    categoria: "Comissões",
+    tipo: "saida",
+    valor: Number(total || 0),
+    observacao: `${qtd} sofá(s) x ${moedaBRL(valorUnitario)}`,
+    dataLancamento: dataLancamento || getHojeLocal(),
+    origem: "comissao_producao",
+    referenciaNome: nome,
+    createdAt: new Date().toISOString()
+  });
+}
+
+function renderVendedores(){
+  const lista = filtrarVendas();
+  const mapaQtd = {};
+
+  lista.forEach(v => {
+    const nome = String(v.vendedorNome || "").trim();
+    if (!nome) return;
+    mapaQtd[nome] = (mapaQtd[nome] || 0) + 1;
+  });
+
+  const nomesRegras = Object.values(regrasComissaoCache).map(r => r.nome).filter(Boolean);
+  const nomes = [...new Set([...Object.keys(mapaQtd), ...nomesRegras])].sort((a,b) => a.localeCompare(b, "pt-BR"));
+
+  const vendedorFiltro = String(filtroVendedor.value || "").toLowerCase().trim();
+  const nomesFiltrados = nomes.filter(nome => {
+    if (!vendedorFiltro) return true;
+    return nome.toLowerCase().includes(vendedorFiltro);
+  });
+
+  const vendasPeriodo = lista.length;
+  let totalComissao = 0;
+  let vendedoresAtivos = 0;
+
+  if (!nomesFiltrados.length){
+    tbodyVendedores.innerHTML = "";
+    vazioVendedores.style.display = "block";
+  } else {
+    vazioVendedores.style.display = "none";
+
+    tbodyVendedores.innerHTML = nomesFiltrados.map(nome => {
+      const qtd = mapaQtd[nome] || 0;
+      const regra = regrasComissaoCache[slugify(nome)];
+      const valorPorVenda = Number(regra?.valorPorVenda || 0);
+      const total = qtd * valorPorVenda;
+
+      if (qtd > 0) vendedoresAtivos++;
+      totalComissao += total;
+
+      return `
+        <tr>
+          <td>${nome}</td>
+          <td>${qtd}</td>
+          <td>
+            <input class="input-mini input-comissao-vendedor" type="number" value="${valorPorVenda}" data-nome="${nome}">
+          </td>
+          <td>${moedaBRL(total)}</td>
+          <td>
+            <button class="btn-save btn-salvar-comissao" type="button" data-nome="${nome}">Salvar</button>
+            ${valorPorVenda > 0 ? `<button class="btn-pdf btn-gerar-pdf" type="button" data-nome="${nome}">Gerar PDF</button>` : ""}
+            <button class="btn-remove btn-excluir-comissao" type="button" data-nome="${nome}">Excluir comissão</button>
+          </td>
+        </tr>
+      `;
+    }).join("");
+  }
+
+  document.getElementById("kpiVendasPeriodo").textContent = vendasPeriodo;
+  document.getElementById("kpiComissaoVendedores").textContent = moedaBRL(totalComissao);
+  document.getElementById("kpiVendedoresAtivos").textContent = vendedoresAtivos;
+
+  document.querySelectorAll(".btn-salvar-comissao").forEach(btn => {
+    btn.onclick = async () => {
+      const nome = btn.getAttribute("data-nome");
+      const input = document.querySelector(`.input-comissao-vendedor[data-nome="${CSS.escape(nome)}"]`);
+      const valor = Number(input?.value || 0);
+
+      await salvarComissaoVendedor(nome, valor);
+    };
+  });
+
+  document.querySelectorAll(".btn-excluir-comissao").forEach(btn => {
+    btn.onclick = async () => {
+      const nome = btn.getAttribute("data-nome");
+      await excluirComissaoVendedor(nome);
+    };
+  });
+
+  document.querySelectorAll(".btn-gerar-pdf").forEach(btn => {
+    btn.onclick = async () => {
+      const nome = btn.getAttribute("data-nome");
+      gerarPDFComissao(nome);
+    };
+  });
+}
+
+async function salvarComissaoVendedor(nome, valor){
+  if (!nome) return;
+
+  const id = slugify(nome);
+  const vendasDoVendedor = getVendasDoVendedor(nome);
+  const totalComissao = vendasDoVendedor.length * Number(valor || 0);
+
+  await setDoc(doc(db, "comissoes_vendedores", id), {
+    nome,
+    valorPorVenda: Number(valor || 0),
+    updatedAt: new Date().toISOString()
+  });
+
+  await salvarLancamentoFinanceiroComissaoVendedor(nome, totalComissao);
+
+  regrasComissaoCache[id] = {
+    nome,
+    valorPorVenda: Number(valor || 0)
+  };
+
+  renderVendedores();
+  alert("Comissão do vendedor salva e vinculada ao financeiro!");
+}
+
+async function excluirComissaoVendedor(nome){
+  if (!nome) return;
+
+  const confirmar = confirm(`Deseja excluir a comissão configurada para ${nome}?`);
+  if (!confirmar) return;
+
+  const id = slugify(nome);
+
+  await deleteDoc(doc(db, "comissoes_vendedores", id));
+  await excluirLancamentoFinanceiroComissaoVendedor(nome);
+
+  delete regrasComissaoCache[id];
+
+  renderVendedores();
+  alert("Comissão excluída do cadastro e do financeiro!");
+}
+
+function gerarPDFComissao(nome){
+  const { jsPDF } = window.jspdf;
+  const docPdf = new jsPDF();
+
+  const vendas = getVendasDoVendedor(nome);
+  const regra = regrasComissaoCache[slugify(nome)];
+  const valorPorVenda = Number(regra?.valorPorVenda || 0);
+  const total = vendas.length * valorPorVenda;
+
+  let y = 20;
+
+  docPdf.setFont("helvetica", "bold");
+  docPdf.setFontSize(18);
+  docPdf.text("RECIBO DE COMISSÃO", 105, y, { align: "center" });
+
+  y += 12;
+  docPdf.setFontSize(11);
+  docPdf.setFont("helvetica", "normal");
+  docPdf.text(`Vendedor: ${nome}`, 14, y);
+  y += 7;
+  docPdf.text(`Período: ${formatarDataBR(dataInicio.value)} até ${formatarDataBR(dataFim.value)}`, 14, y);
+  y += 7;
+  docPdf.text(`Quantidade de vendas: ${vendas.length}`, 14, y);
+  y += 7;
+  docPdf.text(`Valor por venda: ${moedaBRL(valorPorVenda)}` , 14, y);
+  y += 7;
+  docPdf.setFont("helvetica", "bold");
+  docPdf.text(`Total da comissão: ${moedaBRL(total)}`, 14, y);
+
+  y += 12;
+  docPdf.setFont("helvetica", "bold");
+  docPdf.text("Detalhamento das vendas:", 14, y);
+
+  y += 8;
+  docPdf.setFont("helvetica", "normal");
+
+  if (!vendas.length){
+    docPdf.text("Nenhuma venda encontrada neste período.", 14, y);
+    y += 8;
+  } else {
+    vendas.forEach((v, i) => {
+      const data = formatarDataBR(v.dataPedido || "");
+      const tamanho = v?.produto?.tamanho || v?.produto?.medida || v?.produto?.modelo || "-";
+      const cor = v?.produto?.cor || "-";
+      const cidade = v?.cliente?.cidade || "-";
+
+      const linha = `${data} - ${tamanho} - ${cor} - ${cidade}`;
+
+      const linhasQuebradas = docPdf.splitTextToSize(linha, 180);
+
+      if (y > 260){
+        docPdf.addPage();
+        y = 20;
+      }
+
+      docPdf.text(linhasQuebradas, 14, y);
+      y += (linhasQuebradas.length * 6);
+    });
+  }
+
+  y += 10;
+  if (y > 250){
+    docPdf.addPage();
+    y = 20;
+  }
+
+  docPdf.setFont("helvetica", "bold");
+  docPdf.setFontSize(14);
+  docPdf.text(`PAGO: ${moedaBRL(total)}`, 14, y);
+
+  y += 20;
+  docPdf.setFontSize(11);
+  docPdf.setFont("helvetica", "normal");
+  docPdf.text("______________", 14, y);
+  y += 6;
+  docPdf.text("Assinatura do recebedor", 14, y);
+
+  y += 16;
+  docPdf.text(`Emitido em: ${new Date().toLocaleDateString("pt-BR")}`, 14, y);
+
+  const nomeArquivo = `recibo-comissao-${slugify(nome)}-${dataInicio.value}-a-${dataFim.value}.pdf`;
+  docPdf.save(nomeArquivo);
+}
+
+function renderProducao(){
+  const lista = filtrarProducao();
+
+  let total = 0;
+
+  if (!lista.length){
+    tbodyProducao.innerHTML = "";
+    vazioProducao.style.display = "block";
+  } else {
+    vazioProducao.style.display = "none";
+
+    tbodyProducao.innerHTML = lista.map(item => {
+      total += Number(item.total || 0);
+
+      return `
+        <tr>
+          <td>${item.nome || "-"}</td>
+          <td>${item.quantidade || 0}</td>
+          <td>${moedaBRL(item.valorPorSofa || 0)}</td>
+          <td>${moedaBRL(item.total || 0)}</td>
+          <td>${item.dataLancamento || "-"}</td>
+          <td><button class="btn-remove btn-remover-producao" type="button" data-id="${item.id}">Remover</button></td>
+        </tr>
+      `;
+    }).join("");
+  }
+
+  document.getElementById("totalProducao").textContent = moedaBRL(total);
+
+  document.querySelectorAll(".btn-remover-producao").forEach(btn => {
+    btn.onclick = async () => {
+      const id = btn.getAttribute("data-id");
+      await removerProducao(id);
+    };
+  });
+}
+
+async function adicionarProducao(){
+  const nome = nomeProdutor.value.trim();
+  const qtd = Number(qtdProduzida.value || 0);
+  const valor = Number(valorPorSofa.value || 0);
+
+  if (!nome || !qtd || !valor){
+    alert("Preencha nome, quantidade e valor por sofá.");
+    return;
+  }
+
+  const total = qtd * valor;
+  const dataLancamento = getHojeLocal();
+
+  const ref = await addDoc(collection(db, "comissoes_producao"), {
+    nome,
+    quantidade: qtd,
+    valorPorSofa: valor,
+    total,
+    dataLancamento,
+    createdAt: new Date().toISOString()
+  });
+
+  await criarLancamentoFinanceiroProducao(
+    nome,
+    qtd,
+    valor,
+    total,
+    dataLancamento,
+    `comissao_producao_${ref.id}`
+  );
+
+  nomeProdutor.value = "";
+  qtdProduzida.value = "";
+  valorPorSofa.value = "";
+
+  await carregarProducao();
+  renderProducao();
+}
+
+async function removerProducao(id){
+  const confirmar = confirm("Deseja remover este lançamento de produção?");
+  if (!confirmar) return;
+
+  await deleteDoc(doc(db, "comissoes_producao", id));
+  await deleteDoc(doc(db, "financeiro_lancamentos", `comissao_producao_${id}`));
+
+  producaoCache = producaoCache.filter(item => item.id !== id);
+  renderProducao();
+}
+
+async function carregarRegrasVendedores(){
+  const snap = await getDocs(collection(db, "comissoes_vendedores"));
+  regrasComissaoCache = {};
+
+  snap.forEach(d => {
+    regrasComissaoCache[d.id] = { id: d.id, ...d.data() };
+  });
+}
+
+async function carregarVendas(){
+  const snap = await getDocs(collection(db, "vendas"));
+  vendasCache = [];
+
+  snap.forEach(d => {
+    vendasCache.push({ id: d.id, ...d.data() });
+  });
+}
+
+async function carregarProducao(){
+  const snap = await getDocs(collection(db, "comissoes_producao"));
+  producaoCache = [];
+
+  snap.forEach(d => {
+    producaoCache.push({ id: d.id, ...d.data() });
+  });
+
+  producaoCache.sort((a,b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
+}
+
+function renderTudo(){
+  renderVendedores();
+  renderProducao();
+}
+
+function registrarEventos(){
+  filtroPeriodo.onchange = () => {
+    if (filtroPeriodo.value === "personalizado"){
+      dataInicio.value = "";
+      dataFim.value = "";
+    } else {
+      aplicarPeriodoAutomatico();
+    }
+    renderTudo();
+  };
+
+  dataInicio.onchange = renderTudo;
+  dataFim.onchange = renderTudo;
+  filtroVendedor.oninput = renderTudo;
+
+  btnAdicionarProducao.onclick = adicionarProducao;
+}
+
+onAuthStateChanged(auth, async user => {
+  if (!user){
+    location.href = "login.html";
+    return;
+  }
+
+  registrarEventos();
+  aplicarPeriodoAutomatico();
+
+  await Promise.all([
+    carregarVendas(),
+    carregarRegrasVendedores(),
+    carregarProducao()
+  ]);
+
+  renderTudo();
+});
+</script>
+
+</body>
+</html>
