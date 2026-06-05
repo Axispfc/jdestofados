@@ -438,7 +438,7 @@ function abrirMaps(v){
 /* impressão: mantive igual ao seu */
 function imprimirPedido(v){
   const logoSrc = "logo-jd.png";
-  const empresa = "JD FÁBRICA DE ESTOFADOS";
+  const empresa = "JD ESTOFADOS";
 
   const end = enderecoCompleto(v);
   const cliente = v.cliente?.nome || "-";
@@ -451,362 +451,566 @@ function imprimirPedido(v){
   const modelo = v.produto?.modelo || "-";
   const cor = v.produto?.cor || "-";
   const tamanho = v.produto?.tamanho || "-";
+  const tecido = v.produto?.tecido || "Veludo";
   const total = moedaBRL(v.total ?? v.valor ?? 0);
+  const vendedor = v.vendedorNome || "-";
+
+  const pagamento = v.observacoes || (
+    v.pagamento?.tipo === "prazo"
+      ? `${v.pagamento?.parcelas || 0}x`
+      : v.pagamento?.tipo === "pix"
+        ? "PIX à vista"
+        : v.pagamento?.tipo === "dinheiro"
+          ? "Dinheiro à vista"
+          : v.pagamento?.tipo === "cartao"
+            ? `${v.pagamento?.parcelas || 0}x no cartão`
+            : (v.pagamento?.tipo || "-")
+  );
 
   const w = window.open("", "_blank");
 
   w.document.write(`
-  <!DOCTYPE html>
-  <html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Pedido ${pedido}</title>
-    <style>
-      *{
-        box-sizing:border-box;
-      }
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<title>Garantia ${pedido}</title>
 
-      body{
-        font-family: Arial, Helvetica, sans-serif;
-        margin:0;
-        padding:24px;
-        color:#111;
-        background:#fff;
-      }
+<style>
+  *{ box-sizing:border-box; }
 
-      .page{
-        max-width:900px;
-        margin:0 auto;
-      }
+  body{
+    margin:0;
+    padding:10px;
+    background:#fff;
+    color:#111;
+    font-family:Arial, Helvetica, sans-serif;
+  }
 
-      .header{
-        display:flex;
-        align-items:center;
-        gap:18px;
-        margin-bottom:14px;
-      }
+  .page{
+    width:100%;
+    max-width:980px;
+    margin:0 auto;
+    border:1px solid #111;
+  }
 
-      .logo{
-        width:84px;
-        height:84px;
-        object-fit:contain;
-      }
+  .row{ display:grid; }
+  .cell{
+    border-right:1px solid #111;
+    border-bottom:1px solid #111;
+    padding:7px 9px;
+  }
+  .cell:last-child{ border-right:none; }
 
-      .header-text{
-        flex:1;
-      }
+  .top{
+    grid-template-columns: 230px 1fr 220px;
+    min-height:112px;
+  }
 
-      .empresa{
-        font-size:18px;
-        font-weight:800;
-        letter-spacing:.3px;
-      }
+  .logoBox{
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
 
-      .subtitulo{
-        font-size:13px;
-        color:#444;
-        margin-top:2px;
-      }
+  .logo{
+    width:92px;
+    height:92px;
+    object-fit:contain;
+  }
 
-      .linha-topo{
-        border:none;
-        border-top:2px solid #8b6a2b;
-        margin:10px 0 18px;
-      }
+  .brand{
+    font-size:22px;
+    font-weight:900;
+  }
 
-      .grid-top{
-        display:grid;
-        grid-template-columns: 1fr 1fr;
-        gap:12px;
-        margin-bottom:12px;
-      }
+  .docTitle{
+    text-align:center;
+    font-weight:900;
+    font-size:26px;
+    line-height:1.15;
+    padding-top:18px;
+  }
 
-      .box{
-        border:1px solid #d8d8d8;
-        border-radius:18px;
-        padding:14px 16px;
-        min-height:74px;
-      }
+  .docSub{
+    font-size:16px;
+    margin-top:8px;
+  }
 
-      .box-label{
-        font-size:14px;
-        color:#444;
-        margin-bottom:6px;
-      }
+  .docNumber{
+    text-align:center;
+    font-weight:900;
+  }
 
-      .box-value{
-        font-size:16px;
-        font-weight:700;
-      }
+  .docNumber small{
+    display:block;
+    font-size:13px;
+    margin-bottom:8px;
+  }
 
-      .dados{
-        margin-top:6px;
-        margin-bottom:18px;
-      }
+  .docNumber strong{
+    display:block;
+    font-size:22px;
+    margin-bottom:10px;
+  }
 
-      .linha{
-        display:grid;
-        grid-template-columns: 180px 1fr;
-        gap:14px;
-        padding:7px 0;
-        align-items:start;
-      }
+  .infoTop{
+    grid-template-columns: 1fr 1fr 2fr;
+  }
 
-      .linha .label{
-        font-size:16px;
-        color:#333;
-      }
+  .label{
+    font-size:10px;
+    font-weight:900;
+    text-transform:uppercase;
+    margin-bottom:4px;
+  }
 
-      .linha .valor{
-        font-size:16px;
-        font-weight:500;
-      }
+  .value{
+    font-size:15px;
+    font-weight:900;
+  }
 
-      .linha-total{
-        margin-top:12px;
-        display:grid;
-        grid-template-columns: 180px 1fr;
-        gap:14px;
-        align-items:center;
-      }
+  .barcode{
+    height:42px;
+    margin-top:4px;
+    background:repeating-linear-gradient(
+      90deg,
+      #000 0px,
+      #000 2px,
+      #fff 2px,
+      #fff 4px,
+      #000 4px,
+      #000 5px,
+      #fff 5px,
+      #fff 8px
+    );
+  }
 
-      .linha-total .label{
-        font-size:16px;
-      }
+  .barcodeNum{
+    text-align:center;
+    font-size:13px;
+    margin-top:5px;
+  }
 
-      .linha-total .valor{
-        font-size:20px;
-        font-weight:800;
-      }
+  .sectionTitle{
+    background:#000;
+    color:#fff;
+    font-size:13px;
+    font-weight:900;
+    padding:5px 9px;
+    display:inline-block;
+    margin:8px 0 0 0;
+    border-radius:4px 4px 0 0;
+  }
 
-      .garantia{
-        margin-top:28px;
-        border:1px solid #d8d8d8;
-        border-radius:14px;
-        padding:18px 20px;
-      }
+  .clientGrid{
+    grid-template-columns: 1.3fr 1fr;
+    border-top:1px solid #111;
+  }
 
-      .garantia h3{
-        margin:0 0 12px;
-        font-size:17px;
-        letter-spacing:.3px;
-      }
+  .clientGrid2{
+    grid-template-columns: 1fr 1fr 1fr;
+  }
 
-      .garantia p{
-        margin:0 0 10px;
-        font-size:13px;
-        line-height:1.55;
-        text-align:justify;
-      }
+  .full{
+    grid-column:1 / -1;
+  }
 
-      .garantia ul{
-        margin:8px 0 10px 18px;
-        padding:0;
-      }
+  .products{
+    width:100%;
+    border-collapse:collapse;
+    border-top:1px solid #111;
+  }
 
-      .garantia li{
-        margin-bottom:6px;
-        font-size:13px;
-        line-height:1.45;
-      }
+  .products th,
+  .products td{
+    border-right:1px solid #111;
+    border-bottom:1px solid #111;
+    padding:8px;
+    text-align:center;
+    font-size:12px;
+  }
 
-      .assinaturas{
-        margin-top:34px;
-        display:grid;
-        grid-template-columns:1fr 1fr;
-        gap:24px;
-      }
+  .products th{
+    font-weight:900;
+    text-transform:uppercase;
+  }
 
-      .assinatura-box{
-        text-align:center;
-      }
+  .products td{
+    font-weight:800;
+  }
 
-      .assinatura-linha{
-        border-top:2px solid #333;
-        margin-top:38px;
-        padding-top:8px;
-        font-size:14px;
-      }
+  .products th:last-child,
+  .products td:last-child{
+    border-right:none;
+  }
 
-      .rodape{
-        margin-top:26px;
-        font-size:12px;
-        color:#555;
-        text-align:center;
-      }
+  .desc{
+    text-align:left !important;
+    font-size:14px !important;
+  }
 
-      @media print{
-        body{
-          padding:12px;
-        }
+  .totals{
+    grid-template-columns: 1fr 1fr 1fr;
+  }
 
-        .page{
-          max-width:100%;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <div class="page">
+  .bigValue{
+    font-size:20px;
+    font-weight:900;
+    text-align:center;
+    margin-top:6px;
+  }
 
-      <div class="header">
-        <img src="${logoSrc}" alt="Logo JD" class="logo">
-        <div class="header-text">
-          <div class="empresa">${empresa}</div>
-          <div class="subtitulo">Comprovante de Pedido | Entrega</div>
-        </div>
-      </div>
+  .middle{
+    grid-template-columns: 230px 1fr;
+  }
 
-      <hr class="linha-topo">
+  .status{
+    text-align:center;
+    min-height:116px;
+  }
 
-      <div class="grid-top">
-        <div class="box">
-          <div class="box-label">Data do Pedido</div>
-          <div class="box-value">${dataPedido}</div>
-        </div>
+  .check{
+    font-size:38px;
+    color:#0b7d2b;
+    font-weight:900;
+  }
 
-        <div class="box">
-          <div class="box-label">Data da Entrega</div>
-          <div class="box-value">${dataEntrega}</div>
-        </div>
+  .statusText{
+    color:#0b7d2b;
+    font-size:25px;
+    font-weight:900;
+    line-height:1.05;
+  }
 
-        <div class="box">
-          <div class="box-label">Nº do Pedido</div>
-          <div class="box-value">#${pedido}</div>
-        </div>
+  .important{
+    font-size:14px;
+    line-height:1.55;
+    font-weight:700;
+  }
 
-        <div class="box">
-          <div class="box-label">Produto</div>
-          <div class="box-value">${modelo}</div>
-        </div>
-      </div>
+  .warranty{
+    grid-template-columns: 1fr 1.1fr 1fr;
+  }
 
-      <div class="dados">
-        <div class="linha">
-          <div class="label">Cliente:</div>
-          <div class="valor">${cliente}</div>
-        </div>
+  .warranty ul{
+    margin:6px 0 0 18px;
+    padding:0;
+    font-size:12px;
+    line-height:1.45;
+    font-weight:700;
+  }
 
-        <div class="linha">
-          <div class="label">Cor / Tamanho:</div>
-          <div class="valor">${cor} / ${tamanho}</div>
-        </div>
+  .warrantyText{
+    font-size:13px;
+    line-height:1.55;
+    font-weight:700;
+    padding-top:20px;
+  }
 
-        <div class="linha">
-          <div class="label">Contato:</div>
-          <div class="valor">${contato}</div>
-        </div>
+  .declaration{
+    text-align:center;
+    font-size:13px;
+    font-weight:700;
+  }
 
-        <div class="linha">
-          <div class="label">Cidade:</div>
-          <div class="valor">${cidade}</div>
-        </div>
+  .signatures{
+    grid-template-columns: 1fr 1fr 1fr;
+  }
 
-        <div class="linha">
-          <div class="label">Zona:</div>
-          <div class="valor">${zona}</div>
-        </div>
+  .signBox{
+    height:82px;
+  }
 
-        <div class="linha">
-          <div class="label">Endereço:</div>
-          <div class="valor">${end || "-"}</div>
-        </div>
+  .signLine{
+    margin-top:38px;
+    border-top:1px solid #111;
+    text-align:center;
+    font-size:10px;
+    font-weight:900;
+    padding-top:4px;
+  }
 
-        <div class="linha-total">
-          <div class="label">Valor:</div>
-          <div class="valor">${total}</div>
-        </div>
-      </div>
+  .cut{
+    border-top:1px dashed #111;
+    display:grid;
+    grid-template-columns: 160px 1fr 1.2fr 130px;
+  }
 
-      <div class="linha">
-  <div class="label">Pagamento:</div>
-  <div class="valor">${
-    v.observacoes || (
-      v.pagamento?.tipo === "prazo"
-        ? `${v.pagamento?.parcelas || 0}x`
-        : v.pagamento?.tipo === "pix"
-          ? "PIX à vista"
-          : v.pagamento?.tipo === "dinheiro"
-            ? "Dinheiro à vista"
-            : v.pagamento?.tipo === "cartao"
-              ? `${v.pagamento?.parcelas || 0}x no cartão`
-              : (v.pagamento?.tipo || "-")
-    )
-  }</div>
-</div>
+  .stubLogo{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
 
-      <div class="garantia">
-        <h3>TERMO DE GARANTIA</h3>
+  .stubLogo img{
+    width:70px;
+    height:70px;
+    object-fit:contain;
+  }
 
-        <p>
-          A <strong>JD Fábrica de Estofados</strong> assegura ao cliente a
-          <strong>garantia legal de 90 (noventa) dias</strong>, conforme estabelecido pelo
-          <strong>Código de Defesa do Consumidor – Lei nº 8.078/1990</strong>,
-          válida para vícios aparentes ou de fácil constatação.
-        </p>
+  .stub{
+    font-size:12px;
+    font-weight:900;
+    line-height:1.7;
+  }
 
-        <p>
-          A garantia estrutural aplica-se exclusivamente a defeitos relacionados à
-          <strong>estrutura interna do estofado</strong>, tais como:
-        </p>
+  .garantiaBox{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    font-size:17px;
+    font-weight:900;
+  }
 
-        <ul>
-          <li>defeitos na estrutura de madeira ou base de sustentação;</li>
-          <li>falhas na montagem estrutural do produto;</li>
-          <li>problemas que comprometam a estabilidade ou integridade da estrutura.</li>
-        </ul>
+  .footer{
+    background:#000;
+    color:#fff;
+    text-align:center;
+    font-size:14px;
+    font-weight:900;
+    padding:7px;
+  }
 
-        <p>
-          Durante o período de garantia, constatado defeito de fabricação, a
-          <strong>JD Fábrica de Estofados</strong> realizará a análise técnica do produto e,
-          se confirmado o defeito coberto pela garantia, poderá providenciar o reparo,
-          substituição da peça defeituosa ou outra solução adequada, conforme o caso
-          e nos termos da legislação vigente.
-        </p>
+  @media print{
+    body{ padding:0; }
+    .page{ max-width:100%; border:1px solid #111; }
+    @page{ size:A4 portrait; margin:8mm; }
+  }
+</style>
+</head>
 
-        <p><strong>Exclusões de garantia:</strong></p>
+<body>
+<div class="page">
 
-        <ul>
-          <li>uso inadequado ou fora das recomendações do fabricante;</li>
-          <li>desgaste natural decorrente do uso normal do produto;</li>
-          <li>exposição a umidade excessiva, líquidos ou agentes externos;</li>
-          <li>danos causados por transporte após a entrega;</li>
-          <li>rasgos, manchas, queimaduras ou danos ao tecido/revestimento;</li>
-          <li>alterações, desmontagens ou reparos realizados por terceiros não autorizados;</li>
-          <li>mau uso, sobrecarga ou utilização indevida do estofado.</li>
-        </ul>
-
-        <p>
-          Para solicitar atendimento em garantia, o cliente deverá apresentar este comprovante
-          e informar o defeito identificado para avaliação técnica da empresa.
-        </p>
-      </div>
-
-      <div class="assinaturas">
-        <div class="assinatura-box">
-          <div class="assinatura-linha">Assinatura do Cliente</div>
-        </div>
-
-        <div class="assinatura-box">
-          <div class="assinatura-linha">Assinatura do Entregador</div>
-        </div>
-      </div>
-
-      <div class="rodape">
-        ${empresa}
+  <div class="row top">
+    <div class="cell logoBox">
+      <img src="${logoSrc}" class="logo">
+      <div>
+        <div class="brand">JD</div>
+        <div style="font-weight:900;">ESTOFADOS</div>
       </div>
     </div>
 
-    <script>
-      window.onload = () => window.print();
-    <\/script>
-  </body>
-  </html>
+    <div class="cell docTitle">
+      DOCUMENTO AUXILIAR<br>
+      DE GARANTIA E ENTREGA
+      <div class="docSub">NÃO É DOCUMENTO FISCAL</div>
+    </div>
+
+    <div class="cell docNumber">
+      <small>Nº DO DOCUMENTO</small>
+      <strong>#${pedido}</strong>
+      SÉRIE: 001
+    </div>
+  </div>
+
+  <div class="row infoTop">
+    <div class="cell">
+      <div class="label">Data de emissão</div>
+      <div class="value">${dataPedido}</div>
+    </div>
+
+    <div class="cell">
+      <div class="label">Data da entrega</div>
+      <div class="value">${dataEntrega}</div>
+    </div>
+
+    <div class="cell">
+      <div class="label" style="text-align:center;">Código de barras</div>
+      <div class="barcode"></div>
+      <div class="barcodeNum">${pedido}</div>
+    </div>
+  </div>
+
+  <div class="sectionTitle">DADOS DO CLIENTE</div>
+
+  <div class="row clientGrid">
+    <div class="cell">
+      <div class="label">Nome / Razão Social</div>
+      <div class="value">${cliente}</div>
+    </div>
+    <div class="cell">
+      <div class="label">Telefone / WhatsApp</div>
+      <div class="value">${contato}</div>
+    </div>
+  </div>
+
+  <div class="row clientGrid2">
+    <div class="cell">
+      <div class="label">Cidade</div>
+      <div class="value">${cidade}</div>
+    </div>
+    <div class="cell">
+      <div class="label">Zona / Região</div>
+      <div class="value">${zona}</div>
+    </div>
+    <div class="cell">
+      <div class="label">Status</div>
+      <div class="value">ENTREGA</div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="cell full">
+      <div class="label">Endereço completo</div>
+      <div class="value">${end || "-"}</div>
+    </div>
+  </div>
+
+  <div class="sectionTitle">DADOS DOS PRODUTOS / SERVIÇOS</div>
+
+  <table class="products">
+    <thead>
+      <tr>
+        <th>Código</th>
+        <th>Descrição do Produto</th>
+        <th>Cor</th>
+        <th>Medida</th>
+        <th>Tecido</th>
+        <th>Qtde.</th>
+        <th>Vlr Unit.</th>
+        <th>Vlr Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>0001</td>
+        <td class="desc">${modelo}</td>
+        <td>${cor}</td>
+        <td>${tamanho}</td>
+        <td>${tecido}</td>
+        <td>1,00</td>
+        <td>${total}</td>
+        <td>${total}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="row totals">
+    <div class="cell">
+      <div class="label">Valor total dos produtos</div>
+      <div class="bigValue">${total}</div>
+    </div>
+    <div class="cell">
+      <div class="label">Forma de pagamento</div>
+      <div class="bigValue">${pagamento}</div>
+    </div>
+    <div class="cell">
+      <div class="label">Pagamento</div>
+      <div class="bigValue">REALIZADO NA ENTREGA</div>
+    </div>
+  </div>
+
+  <div class="row middle">
+    <div class="cell status">
+      <div class="label">Status da entrega</div>
+      <div class="check">✓</div>
+      <div class="statusText">PRODUTO<br>ENTREGUE</div>
+    </div>
+
+    <div class="cell important">
+      <div class="label">Informações importantes</div>
+      Produto entregue montado e conferido no ato da entrega.<br>
+      Pagamento realizado somente na entrega.<br>
+      Garantia: 90 dias contra defeitos de fabricação.<br><br>
+      <strong>OBRIGADO PELA PREFERÊNCIA!</strong>
+    </div>
+  </div>
+
+  <div class="sectionTitle">TERMO DE GARANTIA - 90 DIAS</div>
+
+  <div class="row warranty">
+    <div class="cell">
+      <div class="label">A garantia cobre:</div>
+      <ul>
+        <li>Defeitos na estrutura de madeira</li>
+        <li>Defeitos nas costuras e espumas</li>
+        <li>Mecanismo retrátil e reclinável</li>
+        <li>Demais defeitos de fabricação</li>
+      </ul>
+    </div>
+
+    <div class="cell">
+      <div class="label">A garantia não cobre:</div>
+      <ul>
+        <li>Mau uso do produto</li>
+        <li>Rasgos, manchas ou queimaduras</li>
+        <li>Exposição ao sol e umidade</li>
+        <li>Transporte por conta do cliente</li>
+        <li>Alterações ou reparos por terceiros</li>
+        <li>Sobrecarga ou utilização indevida</li>
+      </ul>
+    </div>
+
+    <div class="cell warrantyText">
+      A garantia é válida por 90 (noventa) dias a partir da data de entrega deste produto,
+      mediante apresentação deste documento devidamente preenchido e assinado.
+    </div>
+  </div>
+
+  <div class="cell declaration">
+    <strong>DECLARAÇÃO DE ENTREGA</strong><br>
+    Declaro que recebi o produto acima descrito em perfeitas condições, conferi e estou ciente das condições de garantia.
+  </div>
+
+  <div class="row signatures">
+    <div class="cell signBox">
+      <div class="label">Recebido por (Cliente)</div>
+      <div class="signLine">ASSINATURA</div>
+    </div>
+
+    <div class="cell signBox">
+      <div class="label">Entregador</div>
+      <div class="signLine">ASSINATURA</div>
+    </div>
+
+    <div class="cell signBox">
+      <div class="label">Vendedor: ${vendedor}</div>
+      <div class="signLine">ASSINATURA</div>
+    </div>
+  </div>
+
+  <div class="cut">
+    <div class="cell stubLogo">
+      <img src="${logoSrc}">
+    </div>
+
+    <div class="cell stub">
+      COMPROVANTE DE GARANTIA<br>
+      Nº DO DOCUMENTO: #${pedido}<br>
+      SÉRIE: 001
+    </div>
+
+    <div class="cell stub">
+      CLIENTE: ${cliente}<br>
+      TELEFONE: ${contato}<br>
+      DATA DA ENTREGA: ${dataEntrega}
+    </div>
+
+    <div class="cell garantiaBox">
+      GARANTIA<br>90 DIAS
+    </div>
+  </div>
+
+  <div class="footer">
+    GUARDE ESTE COMPROVANTE. ELE É A SUA GARANTIA.
+  </div>
+
+</div>
+
+<script>
+  window.onload = () => window.print();
+<\/script>
+</body>
+</html>
   `);
 
   w.document.close();
 }
-  
+
+
 async function marcarEntregue(id){
   const ok = confirm("Confirmar: este pedido foi ENTREGUE?");
   if(!ok) return;
