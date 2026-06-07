@@ -100,6 +100,16 @@ button {
   background: #125aa0;
 }
 
+.btn-termo {
+  background: #111;
+  color: #fff;
+  margin-left: 8px;
+}
+
+.btn-termo:hover {
+  background: #333;
+}
+
 .paginacao {
   display: flex;
   justify-content: center;
@@ -124,6 +134,10 @@ button {
   .filtros button {
     width: 100%;
     box-sizing: border-box;
+  }
+
+  .btn-termo {
+    margin-left: 0;
   }
 }
 </style>
@@ -208,6 +222,610 @@ function inicioDaSemana(data = new Date()) {
   const diff = dia === 0 ? -6 : 1 - dia;
   d.setDate(d.getDate() + diff);
   return d;
+}
+
+function moedaBRL(n){
+  return Number(n || 0).toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL"
+  });
+}
+
+function formatarZona(z){
+  const map = {
+    centro: "Centro",
+    zona_norte: "Zona Norte",
+    zona_sul: "Zona Sul",
+    zona_leste: "Zona Leste",
+    zona_oeste: "Zona Oeste",
+    abc_paulista: "ABC Paulista",
+    litoral_sul: "Litoral Sul",
+    litoral_norte: "Litoral Norte",
+    sudoeste: "Sudoeste",
+    interior: "Interior"
+  };
+  return map[z] || (z ? String(z) : "-");
+}
+
+function enderecoCompleto(v){
+  const c = v.cliente || {};
+  const partes = [c.rua, c.numero, c.bairro, c.cidade, c.cep].filter(Boolean);
+  return partes.join(" - ");
+}
+
+function imprimirPedido(v){
+  const logoSrc = "logo-jd.png";
+
+  const end = enderecoCompleto(v);
+  const cliente = v.cliente?.nome || "-";
+  const contato = v.cliente?.contato || "-";
+  const cidade = v.cliente?.cidade || "-";
+  const zona = formatarZona(v.zona);
+  const pedido = v.pedido || "-";
+  const dataPedido = v.dataPedido || "-";
+  const dataEntrega = v.dataEntrega || v.dataPedido || "-";
+  const modelo = v.produto?.modelo || "-";
+  const cor = v.produto?.cor || "-";
+  const tamanho = v.produto?.tamanho || "-";
+  const tecido = v.produto?.tecido || "Veludo";
+  const total = moedaBRL(v.total ?? v.valor ?? 0);
+  const vendedor = v.vendedorNome || "-";
+
+  const pagamento = v.observacoes || (
+    v.pagamento?.tipo === "prazo"
+      ? `${v.pagamento?.parcelas || 0}x`
+      : v.pagamento?.tipo === "pix"
+        ? "PIX à vista"
+        : v.pagamento?.tipo === "dinheiro"
+          ? "Dinheiro à vista"
+          : v.pagamento?.tipo === "cartao"
+            ? `${v.pagamento?.parcelas || 0}x no cartão`
+            : (v.pagamento?.tipo || "-")
+  );
+
+  const w = window.open("", "_blank");
+
+  w.document.write(`
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<title>Garantia ${pedido}</title>
+
+<style>
+  *{ box-sizing:border-box; }
+
+  body{
+    margin:0;
+    padding:10px;
+    background:#fff;
+    color:#111;
+    font-family:Arial, Helvetica, sans-serif;
+  }
+
+  .page{
+    width:100%;
+    max-width:980px;
+    margin:0 auto;
+    border:1px solid #111;
+  }
+
+  .row{ display:grid; }
+
+  .cell{
+    border-right:1px solid #111;
+    border-bottom:1px solid #111;
+    padding:7px 9px;
+  }
+
+  .cell:last-child{ border-right:none; }
+
+  .top{
+    grid-template-columns: 230px 1fr 220px;
+    min-height:112px;
+  }
+
+  .logoBox{
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+
+  .logo{
+    width:92px;
+    height:92px;
+    object-fit:contain;
+  }
+
+  .brand{
+    font-size:22px;
+    font-weight:900;
+  }
+
+  .docTitle{
+    text-align:center;
+    font-weight:900;
+    font-size:26px;
+    line-height:1.15;
+    padding-top:18px;
+  }
+
+  .docSub{
+    font-size:16px;
+    margin-top:8px;
+  }
+
+  .docNumber{
+    text-align:center;
+    font-weight:900;
+  }
+
+  .docNumber small{
+    display:block;
+    font-size:13px;
+    margin-bottom:8px;
+  }
+
+  .docNumber strong{
+    display:block;
+    font-size:22px;
+    margin-bottom:10px;
+  }
+
+  .infoTop{
+    grid-template-columns: 1fr 1fr 2fr;
+  }
+
+  .label{
+    font-size:10px;
+    font-weight:900;
+    text-transform:uppercase;
+    margin-bottom:4px;
+  }
+
+  .value{
+    font-size:15px;
+    font-weight:900;
+  }
+
+  .barcode{
+    height:42px;
+    margin-top:4px;
+    background:repeating-linear-gradient(
+      90deg,
+      #000 0px,
+      #000 2px,
+      #fff 2px,
+      #fff 4px,
+      #000 4px,
+      #000 5px,
+      #fff 5px,
+      #fff 8px
+    );
+  }
+
+  .barcodeNum{
+    text-align:center;
+    font-size:13px;
+    margin-top:5px;
+  }
+
+  .sectionTitle{
+    background:#000;
+    color:#fff;
+    font-size:13px;
+    font-weight:900;
+    padding:5px 9px;
+    display:inline-block;
+    margin:8px 0 0 0;
+    border-radius:4px 4px 0 0;
+  }
+
+  .clientGrid{
+    grid-template-columns: 1.3fr 1fr;
+    border-top:1px solid #111;
+  }
+
+  .clientGrid2{
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+
+  .full{
+    grid-column:1 / -1;
+  }
+
+  .products{
+    width:100%;
+    border-collapse:collapse;
+    border-top:1px solid #111;
+  }
+
+  .products th,
+  .products td{
+    border-right:1px solid #111;
+    border-bottom:1px solid #111;
+    padding:8px;
+    text-align:center;
+    font-size:12px;
+  }
+
+  .products th{
+    font-weight:900;
+    text-transform:uppercase;
+  }
+
+  .products td{
+    font-weight:800;
+  }
+
+  .products th:last-child,
+  .products td:last-child{
+    border-right:none;
+  }
+
+  .desc{
+    text-align:left !important;
+    font-size:14px !important;
+  }
+
+  .totals{
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+
+  .bigValue{
+    font-size:20px;
+    font-weight:900;
+    text-align:center;
+    margin-top:6px;
+  }
+
+  .middle{
+    grid-template-columns: 230px 1fr;
+  }
+
+  .status{
+    text-align:center;
+    min-height:116px;
+  }
+
+  .check{
+    font-size:38px;
+    color:#0b7d2b;
+    font-weight:900;
+  }
+
+  .statusText{
+    color:#0b7d2b;
+    font-size:25px;
+    font-weight:900;
+    line-height:1.05;
+  }
+
+  .important{
+    font-size:14px;
+    line-height:1.55;
+    font-weight:700;
+  }
+
+  .warranty{
+    grid-template-columns: 1fr 1.1fr 1fr;
+  }
+
+  .warranty ul{
+    margin:6px 0 0 18px;
+    padding:0;
+    font-size:12px;
+    line-height:1.45;
+    font-weight:700;
+  }
+
+  .warrantyText{
+    font-size:13px;
+    line-height:1.55;
+    font-weight:700;
+    padding-top:20px;
+  }
+
+  .declaration{
+    text-align:center;
+    font-size:13px;
+    font-weight:700;
+  }
+
+  .signatures{
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+
+  .signBox{
+    height:82px;
+  }
+
+  .signLine{
+    margin-top:38px;
+    border-top:1px solid #111;
+    text-align:center;
+    font-size:10px;
+    font-weight:900;
+    padding-top:4px;
+  }
+
+  .cut{
+    border-top:1px dashed #111;
+    display:grid;
+    grid-template-columns: 160px 1fr 1.2fr 130px;
+  }
+
+  .stubLogo{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  .stubLogo img{
+    width:70px;
+    height:70px;
+    object-fit:contain;
+  }
+
+  .stub{
+    font-size:12px;
+    font-weight:900;
+    line-height:1.7;
+  }
+
+  .garantiaBox{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    font-size:17px;
+    font-weight:900;
+  }
+
+  .footer{
+    background:#000;
+    color:#fff;
+    text-align:center;
+    font-size:14px;
+    font-weight:900;
+    padding:7px;
+  }
+
+  @media print{
+    body{ padding:0; }
+    .page{ max-width:100%; border:1px solid #111; }
+    @page{ size:A4 portrait; margin:8mm; }
+  }
+</style>
+</head>
+
+<body>
+<div class="page">
+
+  <div class="row top">
+    <div class="cell logoBox">
+      <img src="${logoSrc}" class="logo">
+      <div>
+        <div class="brand">JD</div>
+        <div style="font-weight:900;">ESTOFADOS</div>
+      </div>
+    </div>
+
+    <div class="cell docTitle">
+      DOCUMENTO AUXILIAR<br>
+      DE GARANTIA E ENTREGA
+      <div class="docSub">NÃO É DOCUMENTO FISCAL</div>
+    </div>
+
+    <div class="cell docNumber">
+      <small>Nº DO DOCUMENTO</small>
+      <strong>#${pedido}</strong>
+      SÉRIE: 001
+    </div>
+  </div>
+
+  <div class="row infoTop">
+    <div class="cell">
+      <div class="label">Data de emissão</div>
+      <div class="value">${dataPedido}</div>
+    </div>
+
+    <div class="cell">
+      <div class="label">Data da entrega</div>
+      <div class="value">${dataEntrega}</div>
+    </div>
+
+    <div class="cell">
+      <div class="label" style="text-align:center;">Código de barras</div>
+      <div class="barcode"></div>
+      <div class="barcodeNum">${pedido}</div>
+    </div>
+  </div>
+
+  <div class="sectionTitle">DADOS DO CLIENTE</div>
+
+  <div class="row clientGrid">
+    <div class="cell">
+      <div class="label">Nome / Razão Social</div>
+      <div class="value">${cliente}</div>
+    </div>
+    <div class="cell">
+      <div class="label">Telefone / WhatsApp</div>
+      <div class="value">${contato}</div>
+    </div>
+  </div>
+
+  <div class="row clientGrid2">
+    <div class="cell">
+      <div class="label">Cidade</div>
+      <div class="value">${cidade}</div>
+    </div>
+    <div class="cell">
+      <div class="label">Zona / Região</div>
+      <div class="value">${zona}</div>
+    </div>
+    <div class="cell">
+      <div class="label">Status</div>
+      <div class="value">ENTREGA</div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="cell full">
+      <div class="label">Endereço completo</div>
+      <div class="value">${end || "-"}</div>
+    </div>
+  </div>
+
+  <div class="sectionTitle">DADOS DOS PRODUTOS / SERVIÇOS</div>
+
+  <table class="products">
+    <thead>
+      <tr>
+        <th>Código</th>
+        <th>Descrição do Produto</th>
+        <th>Cor</th>
+        <th>Medida</th>
+        <th>Tecido</th>
+        <th>Qtde.</th>
+        <th>Vlr Unit.</th>
+        <th>Vlr Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>0001</td>
+        <td class="desc">${modelo}</td>
+        <td>${cor}</td>
+        <td>${tamanho}</td>
+        <td>${tecido}</td>
+        <td>1,00</td>
+        <td>${total}</td>
+        <td>${total}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="row totals">
+    <div class="cell">
+      <div class="label">Valor total dos produtos</div>
+      <div class="bigValue">${total}</div>
+    </div>
+    <div class="cell">
+      <div class="label">Forma de pagamento</div>
+      <div class="bigValue">${pagamento}</div>
+    </div>
+    <div class="cell">
+      <div class="label">Pagamento</div>
+      <div class="bigValue">REALIZADO NA ENTREGA</div>
+    </div>
+  </div>
+
+  <div class="row middle">
+    <div class="cell status">
+      <div class="label">Status da entrega</div>
+      <div class="check">✓</div>
+      <div class="statusText">PRODUTO<br>ENTREGUE</div>
+    </div>
+
+    <div class="cell important">
+      <div class="label">Informações importantes</div>
+      Produto entregue montado e conferido no ato da entrega.<br>
+      Pagamento realizado somente na entrega.<br>
+      Garantia: 90 dias contra defeitos de fabricação.<br><br>
+      <strong>OBRIGADO PELA PREFERÊNCIA!</strong>
+    </div>
+  </div>
+
+  <div class="sectionTitle">TERMO DE GARANTIA - 90 DIAS</div>
+
+  <div class="row warranty">
+    <div class="cell">
+      <div class="label">A garantia cobre:</div>
+      <ul>
+        <li>Defeitos na estrutura de madeira</li>
+        <li>Defeitos nas costuras e espumas</li>
+        <li>Mecanismo retrátil e reclinável</li>
+        <li>Demais defeitos de fabricação</li>
+      </ul>
+    </div>
+
+    <div class="cell">
+      <div class="label">A garantia não cobre:</div>
+      <ul>
+        <li>Mau uso do produto</li>
+        <li>Rasgos, manchas ou queimaduras</li>
+        <li>Exposição ao sol e umidade</li>
+        <li>Transporte por conta do cliente</li>
+        <li>Alterações ou reparos por terceiros</li>
+        <li>Sobrecarga ou utilização indevida</li>
+      </ul>
+    </div>
+
+    <div class="cell warrantyText">
+      A garantia é válida por 90 (noventa) dias a partir da data de entrega deste produto,
+      mediante apresentação deste documento devidamente preenchido e assinado.
+    </div>
+  </div>
+
+  <div class="cell declaration">
+    <strong>DECLARAÇÃO DE ENTREGA</strong><br>
+    Declaro que recebi o produto acima descrito em perfeitas condições, conferi e estou ciente das condições de garantia.
+  </div>
+
+  <div class="row signatures">
+    <div class="cell signBox">
+      <div class="label">Recebido por (Cliente)</div>
+      <div class="signLine">ASSINATURA</div>
+    </div>
+
+    <div class="cell signBox">
+      <div class="label">Entregador</div>
+      <div class="signLine">ASSINATURA</div>
+    </div>
+
+    <div class="cell signBox">
+      <div class="label">Vendedor: ${vendedor}</div>
+      <div class="signLine">ASSINATURA</div>
+    </div>
+  </div>
+
+  <div class="cut">
+    <div class="cell stubLogo">
+      <img src="${logoSrc}">
+    </div>
+
+    <div class="cell stub">
+      COMPROVANTE DE GARANTIA<br>
+      Nº DO DOCUMENTO: #${pedido}<br>
+      SÉRIE: 001
+    </div>
+
+    <div class="cell stub">
+      CLIENTE: ${cliente}<br>
+      TELEFONE: ${contato}<br>
+      DATA DA ENTREGA: ${dataEntrega}
+    </div>
+
+    <div class="cell garantiaBox">
+      GARANTIA<br>90 DIAS
+    </div>
+  </div>
+
+  <div class="footer">
+    GUARDE ESTE COMPROVANTE. ELE É A SUA GARANTIA.
+  </div>
+
+</div>
+
+<script>
+  window.onload = () => window.print();
+<\/script>
+</body>
+</html>
+  `);
+
+  w.document.close();
 }
 
 function aplicarPeriodoAutomatico() {
@@ -304,7 +922,7 @@ function renderizarPagina() {
       <strong>Cliente:</strong> ${venda.cliente?.nome || "-"}<br>
       <strong>Total:</strong> R$ ${Number(venda.total || 0).toFixed(2)}<br>
       <strong>Data:</strong> ${venda.dataPedido || "-"}<br>
-      <strong class="status">Status:</strong> ${venda.status === "pendente" ? "ativa" : venda.status || "-"}
+      <strong class="status">Status:</strong> ${venda.status === "pendente" ? "ativa" : venda.status || "-"}<br>
     `;
 
     const btnEditar = document.createElement("button");
@@ -315,6 +933,7 @@ function renderizarPagina() {
     btnEditar.onclick = () => {
       location.href = `editar-venda.html?id=${venda.id}`;
     };
+
 
     div.appendChild(btnEditar);
 
@@ -334,6 +953,16 @@ function renderizarPagina() {
     };
 
     div.appendChild(btnExcluir);
+
+    const btnTermo = document.createElement("button");
+    btnTermo.textContent = "Termo garantia";
+    btnTermo.className = "btn-termo";
+
+    btnTermo.onclick = () => {
+      imprimirPedido(venda);
+    };
+
+    div.appendChild(btnTermo);
 
     lista.appendChild(div);
   });
